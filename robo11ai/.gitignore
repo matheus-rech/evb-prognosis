@@ -31,6 +31,9 @@ hotword_training_audio/*.wav
 # Sandbox venvs
 .venv-sandbox/
 
+# Deploy script (contains API keys)
+deploy-pi.sh
+
 # Python
 *.egg-info/
 *.egg

@@ -33,7 +33,7 @@ source .venv/bin/activate
 # Python packages (install Pi ARM deps first, per official ElevenLabs guide)
 echo "[3/6] Installing Python packages..."
 pip install --upgrade pip
-pip install tflite-runtime librosa  # ARM-specific, install before EfficientWord-Net
+pip install librosa  # EfficientWord-Net needs this for audio processing
 pip install -r requirements.txt
 
 # Raspberry Pi GPIO (only on Pi)
