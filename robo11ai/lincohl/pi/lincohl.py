@@ -490,7 +490,7 @@ signal.signal(signal.SIGTERM, handle_shutdown)
 
 
 def main():
-    global convai_active
+    global convai_active, mic_stream
 
     log.info("=" * 55)
     log.info("  LINCOHL - Raspberry Pi Voice Agent (Multi-Hotword)")
