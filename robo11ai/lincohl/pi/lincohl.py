@@ -40,7 +40,7 @@ from elevenlabs.conversational_ai.conversation import (
 from elevenlabs.conversational_ai.default_audio_interface import DefaultAudioInterface
 
 from personalities import PERSONALITIES, DEFAULT_HOTWORD
-from client_tools import CLIENT_TOOLS
+from client_tools import create_client_tools, TOOL_SCHEMAS
 
 # Optional: sync server + agent PATCH
 try:
@@ -343,7 +343,16 @@ dynamic_vars = {
     "user_timezone": os.getenv("USER_TIMEZONE", "America/Sao_Paulo"),
 }
 
-config = ConversationInitiationData(dynamic_variables=dynamic_vars)
+config = ConversationInitiationData(
+    dynamic_variables=dynamic_vars,
+    conversation_config_override={
+        "agent": {
+            "prompt": {
+                "tools": TOOL_SCHEMAS,
+            }
+        }
+    },
+)
 
 
 def create_conversation() -> Conversation:
@@ -356,7 +365,7 @@ def create_conversation() -> Conversation:
         config=config,
         requires_auth=bool(API_KEY),
         audio_interface=DefaultAudioInterface(),
-        client_tools=CLIENT_TOOLS,
+        client_tools=create_client_tools(),
         callback_agent_response=lambda r: (
             log.info("Agent: %s", r),
             conv_logger.add_agent(r),

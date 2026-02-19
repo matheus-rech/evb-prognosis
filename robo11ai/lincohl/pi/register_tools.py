@@ -55,7 +55,10 @@ def register_tools(dry_run: bool = False) -> bool:
     payload = {
         "conversation_config": {
             "agent": {
-                "tools": all_tools,
+                "prompt": {
+                    "tools": all_tools,
+                    "tool_ids": [],
+                }
             }
         }
     }
@@ -99,6 +102,7 @@ def verify_tools():
     tools = (
         config.get("conversation_config", {})
         .get("agent", {})
+        .get("prompt", {})
         .get("tools", [])
     )
 

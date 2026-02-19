@@ -62,42 +62,32 @@ def get_weather(parameters: dict) -> str:
 
 
 def get_time(parameters: dict) -> str:
-    """Fetch current time for a timezone via worldtimeapi.org."""
+    """Get current time for a timezone using Python's zoneinfo (no network needed)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo, available_timezones
+
     timezone = parameters.get("timezone", "").strip()
     if not timezone:
         return "No timezone provided. Please specify a timezone like 'America/New_York' or 'Europe/London'."
 
-    log.info("get_time: fetching time for '%s'", timezone)
+    log.info("get_time: computing time for '%s'", timezone)
     try:
-        resp = http_requests.get(
-            f"http://worldtimeapi.org/api/timezone/{timezone}",
-            timeout=10,
+        tz = ZoneInfo(timezone)
+        now = datetime.now(tz)
+        utc_offset = now.strftime("%z")
+        utc_offset_fmt = f"{utc_offset[:3]}:{utc_offset[3:]}"
+
+        result = (
+            f"Current time in {timezone}: "
+            f"{now.strftime('%H:%M:%S')} on {now.strftime('%Y-%m-%d')} "
+            f"(UTC{utc_offset_fmt})."
         )
-        resp.raise_for_status()
-        data = resp.json()
-
-        datetime_str = data.get("datetime", "unknown")
-        abbreviation = data.get("abbreviation", "")
-        utc_offset = data.get("utc_offset", "")
-
-        # Parse the datetime for a friendlier format
-        # Format: "2026-02-19T14:30:45.123456-03:00"
-        if "T" in datetime_str:
-            date_part, time_rest = datetime_str.split("T", 1)
-            time_part = time_rest.split(".")[0]  # strip microseconds
-            result = (
-                f"Current time in {timezone} ({abbreviation}): "
-                f"{time_part} on {date_part} (UTC{utc_offset})."
-            )
-        else:
-            result = f"Current time in {timezone}: {datetime_str}."
-
         log.info("get_time: %s", result)
         return result
 
-    except http_requests.exceptions.HTTPError as e:
-        log.error("get_time HTTP error: %s", e)
-        return f"Could not fetch time for '{timezone}'. Check the timezone name (e.g. 'America/New_York')."
+    except KeyError:
+        log.error("get_time: unknown timezone '%s'", timezone)
+        return f"Unknown timezone '{timezone}'. Use IANA names like 'America/New_York', 'Europe/London', 'Asia/Tokyo'."
     except Exception as e:
         log.error("get_time error: %s", e)
         return f"Time lookup failed: {e}"
@@ -207,11 +197,15 @@ TOOL_SCHEMAS = [
 ]
 
 # ---------------------------------------------------------------------------
-# Client tools dict (keys must match schema names exactly)
+# Create a ClientTools instance with handlers registered
 # ---------------------------------------------------------------------------
 
-CLIENT_TOOLS = {
-    "get_weather": get_weather,
-    "get_time": get_time,
-    "web_search": web_search,
-}
+def create_client_tools():
+    """Build a ClientTools instance with all tool handlers registered."""
+    from elevenlabs.conversational_ai.conversation import ClientTools
+
+    ct = ClientTools()
+    ct.register("get_weather", get_weather)
+    ct.register("get_time", get_time)
+    ct.register("web_search", web_search)
+    return ct
