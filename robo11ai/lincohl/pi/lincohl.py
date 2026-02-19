@@ -40,6 +40,7 @@ from elevenlabs.conversational_ai.conversation import (
 from elevenlabs.conversational_ai.default_audio_interface import DefaultAudioInterface
 
 from personalities import PERSONALITIES, DEFAULT_HOTWORD
+from client_tools import CLIENT_TOOLS
 
 # Optional: sync server + agent PATCH
 try:
@@ -355,6 +356,7 @@ def create_conversation() -> Conversation:
         config=config,
         requires_auth=bool(API_KEY),
         audio_interface=DefaultAudioInterface(),
+        client_tools=CLIENT_TOOLS,
         callback_agent_response=lambda r: (
             log.info("Agent: %s", r),
             conv_logger.add_agent(r),
