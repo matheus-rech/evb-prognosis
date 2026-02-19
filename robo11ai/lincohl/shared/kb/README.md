@@ -6,7 +6,7 @@ Lincoln primary sources for grounding the Lincohl voice assistant in authentic s
 
 | File | Content | Size |
 |------|---------|------|
-| `lincoln_primary_sources.txt` | Gettysburg Address, Second Inaugural, Farewell at Springfield, Letter to Greeley, 25+ verified quotes | ~12KB |
+| `lincoln_primary_sources.txt` | Gettysburg Address, Second Inaugural, First Inaugural, House Divided Speech, Farewell at Springfield, Letter to Greeley, 25+ verified quotes | ~48KB |
 
 ## Upload to ElevenLabs
 
@@ -38,8 +38,6 @@ All texts are public domain (pre-1928 US works):
 
 ## Future Additions
 
-- House Divided Speech (1858) — long, would benefit from a separate file
-- First Inaugural Address (1861) — long, separate file recommended
 - Cooper Union Address (1860)
 - Emancipation Proclamation (1863)
 - Bixby Letter (1864)
