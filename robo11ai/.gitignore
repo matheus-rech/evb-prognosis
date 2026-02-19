@@ -24,7 +24,12 @@ Thumbs.db
 
 # Conversation history (generated at runtime)
 conversation_history/
-hotword_refs/
+
+# Hotword training intermediaries (WAV converted from MP3)
+hotword_training_audio/*.wav
+
+# Sandbox venvs
+.venv-sandbox/
 
 # Python
 *.egg-info/

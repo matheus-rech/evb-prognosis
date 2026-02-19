@@ -8,6 +8,11 @@ EfficientWord-Net>=0.2.2
 numpy>=1.24.0
 python-dotenv>=1.0.0
 
+# EfficientWord-Net transitive deps — explicit for Raspberry Pi ARM
+# (auto-install often fails; official guide installs these manually)
+tflite-runtime>=2.14.0
+librosa>=0.10.0
+
 # Systemd watchdog integration
 sdnotify>=0.3.2
 
