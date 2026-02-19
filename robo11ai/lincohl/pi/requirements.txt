@@ -1,0 +1,18 @@
+# Lincohl Pi - Voice Agent
+# EfficientWord-Net hotword detection + ElevenLabs Conversational AI
+
+# Core
+elevenlabs>=1.50.0
+PyAudio>=0.2.14
+EfficientWord-Net>=0.2.2
+numpy>=1.24.0
+python-dotenv>=1.0.0
+
+# Systemd watchdog integration
+sdnotify>=0.3.2
+
+# Sync server client (optional)
+requests>=2.31.0
+
+# Raspberry Pi GPIO (optional, Pi only)
+# RPi.GPIO>=0.7.1

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Build artifacts
+.next/
+dist/
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Databases (local dev)
+*.db
+*.db-journal
+*.db-wal
+
+# Conversation history (generated at runtime)
+conversation_history/
+hotword_refs/
+
+# Python
+*.egg-info/
+*.egg

@@ -1,0 +1,49 @@
+# Install:
+#   sudo cp lincohl.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable lincohl
+#   sudo systemctl start lincohl
+#
+# Logs:
+#   journalctl -u lincohl -f
+#
+# Status:
+#   sudo systemctl status lincohl
+
+[Unit]
+Description=Lincohl Voice Assistant
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+
+# Change this user if your Pi user is different
+User=pi
+Group=pi
+
+WorkingDirectory=/home/pi/lincohl/pi
+ExecStart=/home/pi/lincohl/pi/.venv/bin/python lincohl.py
+
+# Environment: venv Python on PATH, .env for API keys
+Environment=PATH=/home/pi/lincohl/pi/.venv/bin:/usr/bin:/bin
+EnvironmentFile=-/home/pi/lincohl/pi/.env
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Watchdog: systemd kills the process if no sd_notify("WATCHDOG=1")
+# is received within 30 seconds
+WatchdogSec=30
+
+# Allow extra time for model loading on slow SD cards
+TimeoutStartSec=120
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lincohl
+
+[Install]
+WantedBy=multi-user.target
