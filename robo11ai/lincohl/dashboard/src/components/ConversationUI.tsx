@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { getConversationToken } from "@/lib/actions";
-import Orb from "./Orb";
-import { Mic, MicOff, PhoneOff } from "lucide-react";
+import { BarVisualizer, type AgentState } from "@/components/ui/bar-visualizer";
+import LiveTranscript, { type TranscriptMessage } from "./LiveTranscript";
+import { Mic, PhoneOff } from "lucide-react";
 
 export default function ConversationUI() {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const volumeRef = useRef(0);
-  const [volume, setVolume] = useState(0);
+  const [liveMessages, setLiveMessages] = useState<TranscriptMessage[]>([]);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -26,30 +25,35 @@ export default function ConversationUI() {
     },
     onMessage: (msg) => {
       console.log("[conversation] message:", msg);
+      setLiveMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          role: msg.source === "user" ? "user" : "agent",
+          text: msg.message,
+        },
+      ]);
     },
   });
 
   const { status, isSpeaking } = conversation;
   const isConnected = status === "connected";
 
-  // Poll volume
-  useEffect(() => {
-    if (!isConnected) return;
-    const id = setInterval(() => {
-      const v = isSpeaking
-        ? conversation.getOutputVolume()
-        : conversation.getInputVolume();
-      volumeRef.current = v;
-      setVolume(v);
-    }, 50);
-    return () => clearInterval(id);
-  }, [isConnected, isSpeaking, conversation]);
+  // Map conversation state to AgentState for BarVisualizer
+  const agentState: AgentState | undefined =
+    status === "connecting"
+      ? "connecting"
+      : !isConnected
+        ? undefined
+        : isSpeaking
+          ? "speaking"
+          : "listening";
 
   const startConversation = useCallback(async () => {
     try {
       setError(null);
+      setLiveMessages([]);
       const url = await getConversationToken();
-      setSignedUrl(url);
       await conversation.startSession({ signedUrl: url });
     } catch (e) {
       setError(String(e));
@@ -65,23 +69,21 @@ export default function ConversationUI() {
   }, [conversation]);
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Orb */}
-      <div className="relative">
-        <Orb
-          isActive={isConnected}
-          isSpeaking={isSpeaking}
-          volume={volume}
-          size={240}
-        />
-        {isConnected && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-            <span className="text-xs text-gray-400 bg-black/60 px-2 py-0.5 rounded-full">
-              {isSpeaking ? "Lincohl is speaking..." : "Listening..."}
-            </span>
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col items-center gap-6 w-full">
+      {/* Visualizer */}
+      <BarVisualizer
+        state={agentState}
+        barCount={20}
+        demo
+        className="w-full h-28 rounded-xl"
+      />
+
+      {/* Status label */}
+      {isConnected && (
+        <span className="text-xs text-gray-400">
+          {isSpeaking ? "Lincohl is speaking..." : "Listening..."}
+        </span>
+      )}
 
       {/* Controls */}
       <div className="flex items-center gap-4">
@@ -104,7 +106,7 @@ export default function ConversationUI() {
         )}
       </div>
 
-      {/* Status */}
+      {/* Connection status */}
       <div className="text-center">
         <div className="text-sm text-gray-500">
           {status === "connecting" && "Connecting..."}
@@ -115,6 +117,13 @@ export default function ConversationUI() {
           <div className="text-sm text-red-400 mt-1">{error}</div>
         )}
       </div>
+
+      {/* Live transcript */}
+      {liveMessages.length > 0 && (
+        <div className="w-full border-t border-white/10 pt-4">
+          <LiveTranscript messages={liveMessages} />
+        </div>
+      )}
     </div>
   );
 }

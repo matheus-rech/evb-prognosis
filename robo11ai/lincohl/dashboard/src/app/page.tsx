@@ -7,6 +7,7 @@ import EventFeed from "@/components/EventFeed";
 import ConversationHistory from "@/components/ConversationHistory";
 import McpManager from "@/components/McpManager";
 import PersonalityManager from "@/components/PersonalityManager";
+import AgentInfoPanel from "@/components/AgentInfoPanel";
 import { Settings } from "lucide-react";
 import {
   connectSync,
@@ -18,10 +19,15 @@ import {
 } from "@/lib/sync";
 
 interface AgentConfig {
+  name: string;
   system_prompt: string;
+  llm: string;
   native_mcp_server_ids: string[];
   voice_id: string;
   temperature: number;
+  tool_ids: string[];
+  built_in_tools: Record<string, unknown>;
+  knowledge_base: Array<{ id: string; name: string; type: string }>;
 }
 
 export default function Dashboard() {
@@ -191,7 +197,7 @@ export default function Dashboard() {
         </div>
       ) : (
         /* ==================== CONFIG TAB ==================== */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personality / System Prompt */}
           <div className="p-5 rounded-xl bg-white/[0.03] border border-white/10">
             {agentConfig ? (
@@ -216,6 +222,20 @@ export default function Dashboard() {
                 onUpdate={async (mcps) => {
                   await patchAgent({ native_mcp_server_ids: mcps });
                 }}
+              />
+            ) : (
+              <div className="text-sm text-gray-500">Loading agent config...</div>
+            )}
+          </div>
+
+          {/* Agent Info */}
+          <div className="p-5 rounded-xl bg-white/[0.03] border border-white/10">
+            {agentConfig ? (
+              <AgentInfoPanel
+                toolIds={agentConfig.tool_ids}
+                knowledgeBase={agentConfig.knowledge_base}
+                agentName={agentConfig.name}
+                llm={agentConfig.llm}
               />
             ) : (
               <div className="text-sm text-gray-500">Loading agent config...</div>
