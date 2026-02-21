@@ -1,0 +1,12 @@
+Screenshot v3 observations (after ML inference fix):
+- Dark glassmorphism theme looks great
+- Header with "CLINICAL DECISION SUPPORT TOOL" banner in cyan
+- "EVB PROGNOSIS" title with "1-Year Mortality Risk Calculator" subtitle
+- Quick Start clinical scenarios (Compensated Child A, Decompensated Child C)
+- 3 tabs: General Info, Clinical Status, Laboratory
+- Form fields with sliders and dropdowns
+- Age slider with +/- buttons
+- Sex, Race, Etiology dropdowns
+- Tab bar at bottom with Calculator and About tabs
+- Overall design matches the HTML reference well
+- All 15 tests pass including exact ML model match

@@ -1,0 +1,27 @@
+New pipeline model categories (from encoder):
+sex: ['female', 'male']
+race: ['White', 'black', 'missing', 'other']
+etiology: ['alcohol', 'alcohol+hcv', 'crypto', 'hcv', 'nash']
+hepatorenal_syndrome: ['no', 'yes']
+omeprazole: ['no', 'yes']
+spironolactone: ['no', 'yes']
+furosemide: ['no', 'yes']
+propanolol: ['no', 'yes']
+dialisis: ['no']  (only 'no' in training data)
+portal_vein_thrombosis: ['no', 'yes']
+ascitis: ['no', 'yes']
+hepatocellular_carcinoma: ['no', 'yes']
+varices: ['missing', 'yes']
+red_wale_marks: ['missing', 'no', 'yes']
+rupture_point: ['missing', 'no', 'yes']
+active_bleeding: ['missing', 'no', 'yes']
+therapy: ['Banding', 'missing', 'no therapy']
+
+Key differences from old model:
+- etiology (not etiology_cirrosis): alcohol, alcohol+hcv, crypto, hcv, nash
+- varices: missing/yes (not small/medium/large)
+- red_wale_marks, rupture_point, active_bleeding: missing/no/yes (3 options)
+- therapy: Banding/missing/no therapy
+- race: White (capitalized), black, missing, other
+- dialisis: only 'no' in training data
+- REMOVED: rebleeding, time_to_endoscophy_hours

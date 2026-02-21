@@ -1,0 +1,90 @@
+PAPER: Development and prospective validation of a machine learning model to predict mortality 
+in cirrhosis with esophageal variceal bleeding
+Published: World J Hepatol 2026; 18(2): 111099
+DOI: 10.4254/wjh.v18.i2.111099
+Authors: Rech MM, Corso LL, Dal Bó EF, Ferraza AD, Tomé F, Terres AZ, Balbinot RS, Balbinot RA, Balbinot SS, Soldera J
+
+KEY FINDINGS:
+- Retrospective cohort: 94 patients (2010-2016), Prospective validation: 24 patients (2017-2018)
+- 36 clinical, laboratory, and imaging variables included
+- Random forest model achieved highest AUC: 0.91 (95% CI: 0.85-0.96) internal validation
+- Prospective validation: AUC 0.88 (95% CI: 0.80-0.94)
+- Calibration: Brier score 0.12 (excellent)
+- Five-fold cross-validation for calibration
+- Model deployed at: https://huggingface.co/spaces/mmrech/evb-br
+- Frontend: Gradio 5.3, Backend: Python 3 with scikit-learn
+
+36 VARIABLES (from paper):
+Age, sex, cause of cirrhosis, use of omeprazole, hepatorenal syndrome, use of spironolactone, 
+use of furosemide, previous use of non-selective beta-blockers, hemodialysis, portal vein thrombosis, 
+ascites, hepatocellular carcinoma, encephalopathy, serum albumin, total bilirubin, direct bilirubin, 
+prothrombin time, INR, creatinine, platelet, AST, ALT, leucocytes, hemoglobin, hematocrit, 
+sodium, potassium, time-to-endoscopy, size of varices, red wall marks, rupture points, 
+active bleeding, therapy used for treatment, terlipressin doses, race, rebleeding
+
+TRADITIONAL SCORES COMPARED:
+- MELD (AUC 0.752, 95%CI: 0.654-0.850)
+- MELD-Na (AUC 0.762, 95%CI: 0.665-0.859)
+- Child-Pugh (AUC 0.764, 95%CI: 0.667-0.861) - best traditional
+- Glasgow-Blatchford (AUC 0.635, 95%CI: 0.527-0.743) - worst
+
+SHAP FEATURE IMPORTANCE (from paper):
+Most influential: race, total bilirubin, INR, albumin, creatinine, hepatorenal syndrome
+Secondary: medication use (beta-blockers, spironolactone, furosemide), clinical parameters 
+(ascites, hepatocellular carcinoma)
+
+MODEL DETAILS:
+- CalibratedClassifierCV with 5-fold cross-validation
+- Random Forest with calibration (isotonic)
+- Preprocessing: KNN imputation (k=10), one-hot encoding, StandardScaler
+- No feature selection - all 36 variables used
+- Class imbalance addressed via stratified sampling (51.1% mortality)
+
+TABLE 1 - Baseline characteristics:
+Race: White 16.7%, Black 4.8%, Other 78.6% (retrospective)
+Etiology: Alcohol 61.7%, Alcohol+HCV 13.8%, HCV 18.1%
+
+TABLES FROM PAPER:
+
+Table 2 - ML Model Comparison:
+Random forest: Sensitivity 0.80, Specificity 0.86, Accuracy 0.83
+Logistic regression: 0.67, 0.71, 0.69
+SVM: 0.73, 0.64, 0.69
+Naive Bayes: 0.93, 0.21, 0.59
+Decision tree: 0.53, 0.79, 0.66
+MLP: 0.67, 0.86, 0.76
+
+Table 3 - RF Internal vs Prospective Validation:
+Internal: AUC 0.715±0.106, Accuracy 0.688±0.089, Recall 0.752±0.127, F1 0.657±0.109, Brier 0.218±0.038
+Prospective: AUC 0.927±0.053, Accuracy 0.829±0.078, Recall 0.867±0.126, F1 0.760±0.120, Brier 0.175±0.016
+
+Table 4 - RF vs Traditional Scores (n=97):
+Random forest: AUC 0.915 (0.856-0.961), Sens 0.800, Spec 0.860, Acc 0.830, Brier 0.124
+MELD-Na: AUC 0.742 (0.651-0.823), Sens 0.688, Spec 0.717, Acc 0.702, Brier 0.186
+MELD: AUC 0.726 (0.634-0.809), Sens 0.667, Spec 0.696, Acc 0.681, Brier 0.194
+Child-Pugh: AUC 0.685 (0.591-0.771), Sens 0.625, Spec 0.674, Acc 0.649, Brier 0.217
+Glasgow-Blatchford: AUC 0.598 (0.502-0.690), Sens 0.542, Spec 0.609, Acc 0.574, Brier 0.248
+
+Figure 4 - SHAP Feature Importance (ordered by mean |SHAP|):
+1. Race (highest impact)
+2. Total bilirubin
+3. INR
+4. Albumin
+5. Creatinine
+6. Hepatorenal syndrome
+7. NBBS (non-selective beta-blockers)
+8. Spironolactone use
+9. Furosemide use
+10. Ascites
+11. Hepatocellular carcinoma
+12. Portal vein thrombosis
+
+Figure 5 - Calibration Plots:
+Random forest: Brier = 0.067 (excellent calibration)
+MELD-Na: Brier = 0.224
+MELD: Brier = 0.238
+Child-Pugh: Brier = 0.199
+Glasgow-Blatchford: Brier = 0.247
+
+PAPER URL for the model: https://huggingface.co/spaces/mmrech/evb-br
+The model uses 100 trees, bootstrap aggregation, isotonic calibration via 5-fold CV.

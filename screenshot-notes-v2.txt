@@ -1,0 +1,15 @@
+Screenshot V2 Observations:
+- Dark background (#030708) is correct
+- Red disclaimer banner at top: correct
+- Title "EVB Prognosis" + "Calculator" in cyan: correct
+- Subtitle text: correct
+- Quick Start presets section with chips: correct
+- Glass card with Demographics & Clinical Status section title in cyan with line: correct
+- Age slider with cyan thumb and value display (52): correct
+- Sex dropdown: correct
+- Etiology with info icon: correct
+- Ascites with info icon: correct
+- Encephalopathy with info icon: correct
+- Tab bar at bottom with Calculator (active, cyan) and About tabs: correct
+- Overall dark glassmorphism look matches the HTML very well
+- No visible errors or layout issues

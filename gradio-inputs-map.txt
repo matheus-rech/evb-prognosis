@@ -1,0 +1,61 @@
+GRADIO APP INPUTS MAP (34 total)
+=================================
+
+TAB 1: General Info (10 inputs)
+1.  age: Slider 18-100 step=1 default=50
+2.  sex: Dropdown [male, female] default=male
+3.  race: Dropdown [white, black, asian, other] default=white
+4.  etiology_cirrosis: Dropdown [alcohol, hcv, alcohol+hcv, other] default=alcohol
+5.  hepatorenal_syndrome: Dropdown [yes, no] default=no
+6.  omeprazole: Dropdown [yes, no] default=no
+7.  spironolactone: Dropdown [yes, no] default=yes
+8.  furosemide: Dropdown [yes, no] default=yes
+9.  propanolol: Dropdown [yes, no] default=no
+10. dialisis: Dropdown [yes, no] default=no
+
+TAB 2: Clinical Status (11 inputs)
+11. portal_vein_thrombosis: Dropdown [yes, no] default=no
+12. ascitis: Dropdown [yes, no] default=yes
+13. hepatocellular_carcinoma: Dropdown [yes, no] default=no
+14. varices: Dropdown [yes, no] default=yes
+15. red_wale_marks: Dropdown [yes, no] default=no
+16. rupture_point: Dropdown [yes, no] default=no
+17. active_bleeding: Dropdown [yes, no] default=no
+18. rebleeding: Dropdown [yes, no] default=no
+19. therapy: Dropdown [Banding, Sclerotherapy, No therapy] default=Banding
+20. terlipressin_dose: Slider 0-20 step=1 default=2
+21. time_to_endoscophy_hours: Slider 0-48 step=1 default=12
+
+TAB 3: Laboratory Values (13 inputs)
+-- Liver Function Tests --
+22. albumin: Slider 1-5 step=0.1 default=3.5
+23. total_bilirrubin: Slider 0.1-30 step=0.1 default=2.0
+24. direct_bilirrubina: Slider 0.1-10 step=0.1 default=0.5
+25. inr: Slider 0.5-5 step=0.1 default=1.2
+26. creatinine: Slider 0.1-10 step=0.1 default=1.0
+-- Complete Blood Count --
+27. platelets: Slider 10-500 step=1 default=150
+28. hemoglobin: Slider 5-20 step=0.1 default=13
+29. hematocrit: Slider 15-60 step=0.1 default=40
+30. leucocytes: Slider 1-50 step=0.1 default=6
+-- Liver Enzymes & Electrolytes --
+31. ast: Slider 10-500 step=1 default=35
+32. alt: Slider 10-500 step=1 default=25
+33. sodium: Slider 120-160 step=1 default=140
+34. potassium: Slider 2-6 step=0.1 default=4
+
+MODEL INPUT DICT KEYS (for preprocessor):
+age, sex, race, etiology_cirrosis, hepatorenal_syndrome, omeprazole,
+spironolactone, furosemide, propanolol, dialisis, portal_vein_thrombosis,
+ascitis, hepatocellular_carcinoma, albumin, total_bilirrubin,
+direct_bilirrubina, inr, creatinine, platelets, ast, alt, hemoglobin,
+hematocrit, leucocytes, sodium, potassium, varices, red_wale_marks,
+rupture_point, active_bleeding, therapy, terlipressin_dose,
+time-to-endoscophy_hours, rebleeding
+
+NOTE: "time-to-endoscophy_hours" uses hyphen in dict key (not underscore)
+
+OUTPUTS: 3 Markdown columns
+1. ML Model Results: prediction, probability, CI, risk category
+2. Traditional Scores: MELD, MELD-Na, Child-Pugh
+3. Model Comparison: AUC values for RF vs traditional

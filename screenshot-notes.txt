@@ -1,0 +1,13 @@
+Screenshot observations:
+- Calculator screen renders correctly with step indicator (General Info, Clinical Status, Lab Values)
+- Age slider with +/- buttons works
+- Picker fields for Sex, Race, Etiology of Cirrhosis render properly
+- Toggle fields for Hepatorenal Syndrome and Omeprazole render with No/Yes buttons
+- "Next" button is visible at the bottom
+- Tab bar shows 4 tabs: Calculator, History, Model Info, Settings
+- Tab bar icons are visible (lightning bolt, clock, info, gear)
+- The app looks clean and professional with the medical theme colors
+
+Issues to fix:
+- Tab bar icons are partially cut off at the bottom edge (Calculator icon text is cut)
+- Need to verify the ML inference works end-to-end

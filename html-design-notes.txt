@@ -1,0 +1,67 @@
+HTML Design Analysis for Mobile App Recreation
+==============================================
+
+VISUAL THEME:
+- Dark background (#030708) with animated vapor clouds (cyan, green, purple blurs)
+- Glassmorphism: glass-bg rgba(255,255,255,0.03), glass-border rgba(255,255,255,0.12)
+- Accent colors: primary=#00d2ff (cyan), secondary=#92fe9d (green)
+- Text: main=#e0e0e0, dim=#999
+- Status: danger=#ff4b2b, warning=#f9d423, success=#00f2fe
+- Fonts: Inter (300,400,600,700) + JetBrains Mono (400,700)
+- Card: rounded-32px, backdrop-blur, border glass
+
+LAYOUT (2-column on desktop, single on mobile):
+Left side: Input region with 3 sections
+Right side: Results region (dark overlay)
+Bottom: References section
+
+SECTIONS (Input Region):
+1. Disclaimer banner (red gradient, danger border)
+2. Header: "EVB Prognosis Calculator" (gradient text) + subtitle
+3. Quick Start - Clinical Scenarios (preset dropdown)
+4. Section 1: Demographics & Clinical Status
+   - Age (slider 18-100, val display)
+   - Sex (select: Male/Female)
+   - Etiology (select: Alcohol/HCV/HBV/NASH/Other) with info icon
+   - Ascites (select: None/Mild-Moderate/Moderate-Severe) with info icon
+   - Encephalopathy (select: None/Grade I-II/Grade III-IV) with info icon
+5. Section 2: Laboratory Profile
+   - Total Bilirubin (slider 0.1-30, step 0.1) with info icon
+   - INR (slider 0.5-6, step 0.1) with info icon
+   - Creatinine (slider 0.1-10, step 0.1) with info icon
+   - Albumin (slider 1-5, step 0.1) with info icon
+   - Sodium (slider 120-150, step 1) with info icon
+   - Dialysis Status (select: No/Yes) with info icon
+6. Section 3: Bleeding Episode Details
+   - Active Bleeding at Endoscopy (select: No/Yes) with info icon
+   - Terlipressin Dose (number input, 0-20, step 0.5)
+   - Time to Endoscopy (number input, 0-48, step 1)
+   - SBP (select: No/Yes) with info icon
+
+RESULTS REGION:
+1. Calculate Risk button (white bg, black text, uppercase)
+2. Score Ring (190px circle, conic gradient showing %, cyan accent)
+   - Center: percentage + "1-Year Mortality" label
+3. Risk Badge (Low/Moderate/High with color coding)
+4. Metrics List:
+   - MELD Score + 3-mo mortality sub
+   - MELD-Na + "Sodium adjusted" sub
+   - Child-Pugh score + Class sub
+   - ALBI Score + Grade sub
+5. Export Results button (transparent, bordered)
+6. Model Performance note (tiny text)
+
+REFERENCES SECTION:
+- 6 clinical references with citations
+
+KEY INTERACTIONS:
+- Sliders show live value display (JetBrains Mono, cyan)
+- Info icons show tooltips on hover
+- Presets load example cases
+- Calculate button runs all scores
+- Score ring animates with conic gradient
+- Risk badge changes color based on risk level
+
+SECTION TITLES:
+- Uppercase, letter-spacing 2px, cyan color
+- Line extending to right (gradient border)

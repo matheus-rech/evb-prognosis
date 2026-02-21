@@ -1,0 +1,99 @@
+# Project TODO
+
+- [x] Set up ML model export (Random Forest + Isotonic Calibration to JSON)
+- [x] Update theme colors (medical red palette)
+- [x] Add icon mappings for all tabs
+- [x] Configure tab layout (Calculator, History, Model Info, Settings)
+- [x] Create TypeScript types for patient data and results
+- [x] Create clinical score services (MELD, MELD-Na, Child-Pugh)
+- [x] Create on-device ML inference engine (Random Forest + Isotonic Calibration)
+- [x] Create assessment history service (AsyncStorage)
+- [x] Build Calculator screen (multi-step form with 3 sections)
+- [x] Build Results screen (ML results + traditional scores + comparison)
+- [x] Build History tab (list of past assessments)
+- [x] Build History Detail screen
+- [x] Build Model Info tab (static informational content)
+- [x] Build Settings tab (about, clear history)
+- [x] Generate app icon and branding
+- [x] Write unit tests for clinical scores (12 tests passing)
+- [x] Write unit tests for ML inference (3 tests passing)
+- [x] Final checkpoint and delivery
+- [x] Redesign theme to match HTML: dark glassmorphism, cyan/green accents, vapor clouds
+- [x] Update types to match all 34 Gradio inputs exactly
+- [x] Add ALBI score calculation to clinical-scores service
+- [x] Rebuild Calculator screen identical to HTML (3 sections, sliders, info tooltips, presets)
+- [x] Rebuild Results display (score ring with conic gradient, risk badge, metrics list)
+- [x] Add references section
+- [x] Update About/Info screen to match dark theme
+- [x] Add export results functionality
+- [x] Rebuild Calculator with all 34 Gradio inputs (General Info, Clinical Status, Laboratory)
+- [x] Use actual ML model (all 5 calibrated classifiers from uploaded joblib) for inference
+- [x] Include model comparison output (RF vs MELD vs MELD-Na vs Child-Pugh)
+- [x] Keep dark glassmorphism theme from HTML design
+- [x] Fix ML inference: use all 5 calibrated classifiers (5-fold CV averaging)
+- [x] Fix race category mapping to match Gradio behavior (lowercase → unknown → all zeros)
+- [x] Verify ML inference matches Python reference probability (0.167302)
+- [x] All 15 unit tests passing (10 clinical scores + 5 ML inference)
+- [x] Add input validation warnings for lab values outside typical clinical ranges
+- [x] Define clinical reference ranges for all numerical inputs
+- [x] Show inline warning badges on out-of-range values in the calculator form
+- [x] Add PDF report generation with patient data, scores, and risk assessment
+- [x] Implement share/print functionality for the PDF report
+- [x] Add "Generate Report" button on the results screen
+- [x] Add validation alerts summary in Results screen
+- [x] Unit tests for validation service (13 tests passing)
+- [x] All 28 unit tests passing (10 clinical + 5 ML + 13 validation)
+- [x] Implement tree-based SHAP feature importance calculation (TreeSHAP algorithm)
+- [x] Create FeatureImportance visualization component (horizontal bar chart)
+- [x] Integrate feature importance into Results screen
+- [x] Unit tests for feature importance calculation (12 tests passing)
+- [x] Verify correct model: confirmed original calibrated model is correct (matches published Space)
+- [x] Re-export model JSON and restore all files to original 34-column calibrated model
+- [x] Implement partial dependence plot computation service
+- [x] Create PDP chart visualization component (SVG line chart with gradient fill)
+- [x] Integrate PDP into Results screen (after Feature Importance section)
+- [x] Unit tests for PDP computation (10 tests passing)
+- [x] All 50 unit tests passing (10 clinical + 5 ML + 13 validation + 12 feature importance + 10 PDP)
+- [x] Set up HF_TOKEN as environment secret (not needed - app uses on-device inference)
+- [x] Explore the Gradio API on mmrech/evb-br Space (verified working)
+- [ ] Build server-side endpoint to proxy predictions to HF Space
+- [ ] Add "Verify with Live Model" button on Results screen
+- [ ] Show comparison between local and live model predictions
+- [x] Fix mmrech/evb-br: remove ssr_mode param, pin gradio==4.44.1, disable dev mode
+- [x] Fix mmrech/evb-brazil: remove ssr_mode param, pin gradio==4.44.1
+- [x] Wait for both Spaces to rebuild successfully (both RUNNING, HTTP 200)
+- [ ] Integrate live Gradio API verification into mobile app
+- [x] Install HuggingFace Skills from https://github.com/huggingface/skills
+- [x] Sensitivity analysis: test Gradio API vs on-device ML model concordance across clinical scenarios (99 scenarios, r=0.999, 100% concordance within 5%)
+- [x] Build Gradio app with glassmorphism CSS + classic toggle
+- [x] Build landing page with device detection (desktop vs mobile routing)
+- [x] Deploy landing page + glassmorphism Gradio + mobile HTML to HF Space
+- [x] Ensure mobile HTML works on both Android and iOS browsers
+- [x] Convert sklearn RF + Isotonic Calibration model to ONNX format
+- [x] Build app.py with ONNX inference, glassmorphism CSS, classic toggle, landing page
+- [x] Push all files to HF Space (evb-br and evb-brazil)
+- [x] Verify end-to-end: landing page → desktop/mobile → predictions match
+- [x] SHAP values and feature importance integrated into Gradio app (v4.0)
+- [x] Add global SHAP feature importance (prospective-validated model) to Gradio results
+- [x] Add patient-specific SHAP values for each individual prediction
+- [x] Build styled HTML visualizations for both SHAP displays (horizontal bar charts)
+- [x] Integrate SHAP into Gradio results section below calculator output
+- [x] Push SHAP-enabled app to both HF Spaces (evb-br and evb-brazil)
+- [x] Add SHAP visualizations (global + patient-specific) to mobile HTML version (/mobile)
+- [x] Add Partial Dependence Plots (PDP) to Gradio app for top features
+- [ ] Set up custom domain for the landing page (evbprognosis.com or similar)
+- [x] Add JSON API endpoints (/api/global-shap, /api/pdp, /api/pdp/{feature}) to HF Spaces
+- [x] PDP precomputation for top 8 features at startup
+- [x] Mobile HTML parser updated to handle v5 HTML output format (both HTML and markdown)
+- [x] Push v5.0 to both evb-br and evb-brazil HF Spaces (verified RUNNING)
+- [x] Add "Verify with Live Model" button in mobile app Results screen
+- [x] Call HF Space Gradio API from mobile app and compare on-device vs server predictions
+- [x] Show side-by-side comparison of local vs live model results
+- [x] Set up custom domain for HF Space landing page (documented — requires PRO HF subscription + domain ownership)
+- [x] Add interactive PDP to mobile HTML (/mobile) using /api/pdp/{feature} endpoint
+- [x] Let users select a feature and see PDP curve rendered client-side (SVG/Canvas)
+- [ ] Create GitHub Actions CI/CD workflow for auto-deploy to HF Spaces
+- [ ] Flatten models/ and static/ paths for HF Space compatibility
+- [ ] Deploy to both evb-br and evb-brazil HF Spaces on push to main
+- [ ] Add HF_TOKEN as GitHub repo secret
+- [ ] Update README with CI/CD documentation
