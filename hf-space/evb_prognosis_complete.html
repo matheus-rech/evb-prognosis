@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVB Prognosis Calculator | Clinical Edition</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent-primary: #00d2ff;
+      --accent-secondary: #92fe9d;
+      --text-main: #e0e0e0;
+      --text-dim: #999;
+      --danger: #ff4b2b;
+      --warning: #f9d423;
+      --success: #00f2fe;
+      --vapor-blur: 40px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #030708;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-x: hidden;
+      padding: 40px 20px;
+    }
+
+    .vapor-field {
+      position: fixed; inset: 0;
+      z-index: -1; overflow: hidden;
+    }
+    .vapor-cloud {
+      position: absolute; border-radius: 50%;
+      filter: blur(var(--vapor-blur));
+      opacity: 0.15;
+      animation: drift 20s infinite alternate ease-in-out;
+    }
+    .c1 { width: 600px; height: 600px; background: var(--accent-primary); top: -10%; left: -10%; }
+    .c2 { width: 500px; height: 500px; background: var(--accent-secondary); bottom: -10%; right: -10%; animation-delay: -5s; }
+    .c3 { width: 400px; height: 400px; background: #8a2be2; top: 40%; left: 30%; animation-delay: -10s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(100px,50px) scale(1.2); } }
+
+    .disclaimer-banner {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(127, 29, 29, 0.3));
+      border: 2px solid var(--danger);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.15);
+    }
+
+    .disclaimer-banner strong {
+      color: var(--danger);
+      font-size: 0.95rem;
+      display: block;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .calculator-card {
+      width: 100%;
+      max-width: 1400px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .input-region { border-right: none; border-bottom: 1px solid var(--glass-border); }
+    }
+
+    .input-region {
+      padding: 48px;
+      border-right: 1px solid var(--glass-border);
+    }
+    header { margin-bottom: 32px; }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      letter-spacing: -1px;
+      background: linear-gradient(to right, #fff, #888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      max-width: 620px;
+      line-height: 1.5;
+    }
+
+    .section-tab { margin-bottom: 32px; }
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::after {
+      content: "";
+      flex-grow: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--glass-border), transparent);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 24px;
+    }
+
+    .preset-row {
+      grid-column: 1 / -1;
+      margin-bottom: 8px;
+    }
+
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: help;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .info-icon:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.95);
+      color: white;
+      font-size: 11px;
+      font-weight: normal;
+      border-radius: 8px;
+      white-space: normal;
+      width: 240px;
+      z-index: 1000;
+      border: 1px solid var(--glass-border);
+      line-height: 1.4;
+      text-align: left;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+
+    select, input[type="number"], input[type="range"] {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    select:focus, input:focus {
+      border-color: var(--accent-primary);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .slider-wrap { display: flex; align-items: center; gap: 12px; }
+    .slider-wrap input[type="range"] {
+      flex-grow: 1;
+      height: 4px;
+      background: var(--glass-border);
+      appearance: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .slider-wrap input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-primary);
+    }
+
+    .val-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent-primary);
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .result-region {
+      padding: 48px;
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+
+    .score-ring {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(0,0,0,0.55) 58%, transparent 60%),
+        conic-gradient(var(--ring-color, var(--accent-primary)) var(--p, 0%), rgba(255,255,255,0.08) 0);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      position: relative;
+      transition: all 0.6s ease;
+    }
+
+    .score-core {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, rgba(0, 210, 255, 0.10), transparent);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(12px);
+    }
+
+    .score-core .pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.7rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .score-core .label {
+      margin-top: 6px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 0 10px;
+    }
+    .score-core .sub-label {
+      font-size: 0.6rem;
+      color: var(--accent-primary);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      width: fit-content;
+      margin: -22px auto 0;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    .status-low {
+      background: var(--success);
+      color: #000;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+    .status-mid {
+      background: var(--warning);
+      color: #000;
+      box-shadow: 0 0 20px rgba(249, 212, 35, 0.4);
+    }
+    .status-high {
+      background: var(--danger);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 75, 43, 0.4);
+    }
+
+    .ci-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      position: relative;
+      margin: 4px 0;
+    }
+    .ci-bar-fill {
+      position: absolute;
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+      opacity: 0.6;
+      transition: all 0.5s ease;
+    }
+    .ci-bar-marker {
+      position: absolute;
+      width: 3px;
+      height: 14px;
+      top: -3px;
+      background: #fff;
+      border-radius: 2px;
+      transition: all 0.5s ease;
+    }
+    .ci-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .metrics-list { display: flex; flex-direction: column; gap: 14px; }
+    .metric-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .metric-item .m-label { font-size: 0.82rem; color: var(--text-dim); }
+    .metric-item .m-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+    .metric-item .m-sub {
+      font-size: 0.62rem;
+      color: var(--accent-primary);
+      text-align: right;
+      display: block;
+    }
+
+    .btn-calculate, .btn-export {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-calculate {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #000;
+      font-size: 0.95rem;
+    }
+
+    .btn-calculate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);
+    }
+
+    .btn-calculate:disabled {
+      opacity: 0.5;
+      cursor: wait;
+      transform: none;
+    }
+
+    .btn-export {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    .btn-export:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .references-section {
+      padding: 32px 48px;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.15);
+    }
+    .references-section h3 {
+      font-size: 0.85rem;
+      color: var(--accent-primary);
+      margin-bottom: 16px;
+    }
+    .references-section ol {
+      padding-left: 20px;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 210, 255, 0.1);
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.7rem;
+      color: var(--accent-primary);
+      margin-top: 8px;
+    }
+    .model-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .error-banner {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #ff8a8a;
+      display: none;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.72rem;
+      margin-top: 8px;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .comparison-table th {
+      color: var(--accent-primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.65rem;
+    }
+    .comparison-table td {
+      color: var(--text-dim);
+    }
+    .comparison-table td:last-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="vapor-field">
+    <div class="vapor-cloud c1"></div>
+    <div class="vapor-cloud c2"></div>
+    <div class="vapor-cloud c3"></div>
+  </div>
+
+  <main class="calculator-card">
+    <div class="disclaimer-banner">
+      <strong>RESEARCH USE ONLY &mdash; NOT FOR CLINICAL DECISION-MAKING</strong>
+      This tool is for educational and research purposes. Predictions are generated by a Random Forest machine learning model (AUC 0.915). It has not been approved by any regulatory agency. Always rely on clinical judgment.
+    </div>
+
+    <div class="main-grid">
+      <section class="input-region">
+        <header>
+          <h1>EVB Prognosis Calculator</h1>
+          <p>Machine learning-based risk calculator for acute esophageal variceal bleeding. Uses a calibrated Random Forest model trained on clinical data with 34 features.</p>
+          <div class="model-badge">
+            <span class="dot"></span>
+            ML Model &mdash; Random Forest (AUC 0.915)
+          </div>
+        </header>
+
+        <!-- Preset Scenarios -->
+        <div class="section-tab">
+          <h2 class="section-title">Quick Start &mdash; Clinical Scenarios</h2>
+          <div class="grid-layout">
+            <div class="input-group preset-row">
+              <label>Load Example Case</label>
+              <select id="preset-select" onchange="loadPreset(this.value); this.value='';">
+                <option value="">-- Select Clinical Scenario --</option>
+                <option value="compensated">Compensated Cirrhosis (Child A)</option>
+                <option value="decompensated">Decompensated Cirrhosis (Child B)</option>
+                <option value="advanced">Advanced Disease (Child C)</option>
+                <option value="hrs">Hepatorenal Syndrome</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Demographics -->
+        <div class="section-tab">
+          <h2 class="section-title">1. Demographics &amp; History</h2>
+          <div class="grid-layout">
+            <div class="input-group">
+              <label for="age">Patient Age</label>
+              <div class="slider-wrap">
+                <input type="range" id="age" min="18" max="100" value="50" />
+                <span class="val-display" id="age-val">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="sex">Sex</label>
+              <select id="sex">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="race">Race*
+                <span class="info-icon" data-tip="Included as a model feature per original training data. May reflect social determinants of health rather than biological differences.">&#9432;</span>
+              </label>
+              <select id="race">
+                <option value="white">White</option>
+                <option value="black">Black</option>
+                <option value="asian">Asian</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="etiology_cirrosis">Etiology of Cirrhosis
+                <span class="info-icon" data-tip="Primary cause of cirrhosis. Alcohol and HCV are most common in variceal bleeding.">&#9432;</span>
+              </label>
+              <select id="etiology_cirrosis">
+                <option value="alcohol">Alcohol</option>
+                <option value="hcv">HCV</option>
+                <option value="alcohol+hcv">Alcohol + HCV</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Clinical Status -->
+        <div class="section-tab">
+          <h2 class="section-title">2. Clinical Status</h2>
+          <div class="grid-layout">
+            <div class="input-group">
+              <label for="ascitis">Ascites
+                <span class="info-icon" data-tip="Fluid accumulation in abdomen. Marker of portal hypertension and hepatic decompensation.">&#9432;</span>
+              </label>
+              <select id="ascitis">
+                <option value="no">No</option>
+                <option value="yes" selected>Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="hepatorenal_syndrome">Hepatorenal Syndrome
+                <span class="info-icon" data-tip="Renal failure in the setting of advanced liver disease without other identifiable cause.">&#9432;</span>
+              </label>
+              <select id="hepatorenal_syndrome">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="hepatocellular_carcinoma">Hepatocellular Carcinoma
+                <span class="info-icon" data-tip="Primary liver cancer, common in cirrhotic patients. Worsens prognosis.">&#9432;</span>
+              </label>
+              <select id="hepatocellular_carcinoma">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="portal_vein_thrombosis">Portal Vein Thrombosis
+                <span class="info-icon" data-tip="Blood clot in the portal vein. Increases portal hypertension and bleeding risk.">&#9432;</span>
+              </label>
+              <select id="portal_vein_thrombosis">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="dialisis">Dialysis
+                <span class="info-icon" data-tip="Dialysis &ge;2x in past week. Indicates severe renal impairment.">&#9432;</span>
+              </label>
+              <select id="dialisis">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Medications -->
+        <div class="section-tab">
+          <h2 class="section-title">3. Current Medications</h2>
+          <div class="grid-layout">
+            <div class="input-group">
+              <label for="omeprazole">Omeprazole (PPI)
+                <span class="info-icon" data-tip="Proton pump inhibitor. Used for gastric acid suppression.">&#9432;</span>
+              </label>
+              <select id="omeprazole">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="spironolactone">Spironolactone
+                <span class="info-icon" data-tip="Aldosterone antagonist diuretic. Used for ascites management.">&#9432;</span>
+              </label>
+              <select id="spironolactone">
+                <option value="no">No</option>
+                <option value="yes" selected>Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="furosemide">Furosemide
+                <span class="info-icon" data-tip="Loop diuretic. Used in combination with spironolactone for ascites.">&#9432;</span>
+              </label>
+              <select id="furosemide">
+                <option value="no">No</option>
+                <option value="yes" selected>Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="propanolol">Propranolol
+                <span class="info-icon" data-tip="Non-selective beta-blocker. Used for portal hypertension prophylaxis.">&#9432;</span>
+              </label>
+              <select id="propanolol">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Laboratory Profile -->
+        <div class="section-tab">
+          <h2 class="section-title">4. Laboratory Profile</h2>
+          <div class="grid-layout">
+            <div class="input-group">
+              <label for="albumin">Albumin (g/dL)
+                <span class="info-icon" data-tip="Reflects hepatic synthetic function. Normal: 3.5-5.5 g/dL. Child-Pugh component.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="albumin" min="1" max="5" step="0.1" value="3.5" />
+                <span class="val-display" id="albumin-val">3.5</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="total_bilirrubin">Total Bilirubin (mg/dL)
+                <span class="info-icon" data-tip="Reflects hepatic dysfunction and cholestasis. Normal: 0.1-1.2 mg/dL. Major MELD component.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="total_bilirrubin" min="0.1" max="30" step="0.1" value="2.0" />
+                <span class="val-display" id="total_bilirrubin-val">2.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="direct_bilirrubina">Direct Bilirubin (mg/dL)
+                <span class="info-icon" data-tip="Conjugated bilirubin. Elevated in cholestatic conditions. Normal: 0.0-0.3 mg/dL.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="direct_bilirrubina" min="0.1" max="10" step="0.1" value="0.5" />
+                <span class="val-display" id="direct_bilirrubina-val">0.5</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="inr">INR
+                <span class="info-icon" data-tip="International Normalized Ratio. Measures coagulation. Normal: 0.8-1.2. Major MELD component.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="inr" min="0.5" max="5" step="0.1" value="1.2" />
+                <span class="val-display" id="inr-val">1.2</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="creatinine">Creatinine (mg/dL)
+                <span class="info-icon" data-tip="Serum creatinine reflects renal function. Normal: 0.6-1.2 mg/dL. Major MELD component.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="creatinine" min="0.1" max="10" step="0.1" value="1.0" />
+                <span class="val-display" id="creatinine-val">1.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="sodium">Sodium (mEq/L)
+                <span class="info-icon" data-tip="Serum sodium. Hyponatremia indicates poor prognosis. Normal: 135-145 mEq/L.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="sodium" min="120" max="160" step="1" value="140" />
+                <span class="val-display" id="sodium-val">140</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="potassium">Potassium (mEq/L)
+                <span class="info-icon" data-tip="Serum potassium. Normal: 3.5-5.0 mEq/L. Abnormalities common in liver disease.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="potassium" min="2" max="6" step="0.1" value="4.0" />
+                <span class="val-display" id="potassium-val">4.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="platelets">Platelets (&times;10&sup3;/&mu;L)
+                <span class="info-icon" data-tip="Platelet count. Low platelets suggest portal hypertension/hypersplenism. Normal: 150-400.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="platelets" min="10" max="500" step="1" value="150" />
+                <span class="val-display" id="platelets-val">150</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="hemoglobin">Hemoglobin (g/dL)
+                <span class="info-icon" data-tip="Blood hemoglobin. Low values indicate anemia/bleeding. Normal: 12-17 g/dL.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="hemoglobin" min="5" max="20" step="0.1" value="13" />
+                <span class="val-display" id="hemoglobin-val">13.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="hematocrit">Hematocrit (%)
+                <span class="info-icon" data-tip="Percentage of blood volume occupied by red blood cells. Normal: 36-48%.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="hematocrit" min="15" max="60" step="1" value="40" />
+                <span class="val-display" id="hematocrit-val">40</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="leucocytes">Leukocytes (&times;10&sup3;/&mu;L)
+                <span class="info-icon" data-tip="White blood cell count. Elevated in infection/inflammation. Normal: 4-11.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="leucocytes" min="1" max="50" step="0.1" value="6.0" />
+                <span class="val-display" id="leucocytes-val">6.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="ast">AST (U/L)
+                <span class="info-icon" data-tip="Aspartate aminotransferase. Liver enzyme. Normal: 10-40 U/L.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="ast" min="10" max="500" step="1" value="35" />
+                <span class="val-display" id="ast-val">35</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="alt">ALT (U/L)
+                <span class="info-icon" data-tip="Alanine aminotransferase. Liver enzyme. Normal: 7-56 U/L.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="alt" min="10" max="500" step="1" value="25" />
+                <span class="val-display" id="alt-val">25</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Endoscopic Findings & Bleeding -->
+        <div class="section-tab">
+          <h2 class="section-title">5. Endoscopic Findings &amp; Bleeding Episode</h2>
+          <div class="grid-layout">
+            <div class="input-group">
+              <label for="varices">Varices Present
+                <span class="info-icon" data-tip="Presence of esophageal or gastric varices on endoscopy.">&#9432;</span>
+              </label>
+              <select id="varices">
+                <option value="no">No</option>
+                <option value="yes" selected>Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="red_wale_marks">Red Wale Marks
+                <span class="info-icon" data-tip="Longitudinal red streaks on varices. Indicate high risk of rupture.">&#9432;</span>
+              </label>
+              <select id="red_wale_marks">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="rupture_point">Rupture Point Visible
+                <span class="info-icon" data-tip="Visible point of variceal rupture on endoscopy.">&#9432;</span>
+              </label>
+              <select id="rupture_point">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="active_bleeding">Active Bleeding
+                <span class="info-icon" data-tip="Active bleeding or spurting at time of endoscopy.">&#9432;</span>
+              </label>
+              <select id="active_bleeding">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="rebleeding">Rebleeding
+                <span class="info-icon" data-tip="Recurrence of bleeding after initial hemostasis.">&#9432;</span>
+              </label>
+              <select id="rebleeding">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="therapy">Endoscopic Therapy
+                <span class="info-icon" data-tip="Type of endoscopic treatment performed for variceal bleeding.">&#9432;</span>
+              </label>
+              <select id="therapy">
+                <option value="Banding" selected>Banding</option>
+                <option value="Sclerotherapy">Sclerotherapy</option>
+                <option value="No therapy">No therapy</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="terlipressin_dose">Terlipressin Dose (mg)
+                <span class="info-icon" data-tip="Vasoactive drug for variceal bleeding. Typical dose 1-2mg q4-6h initially.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="terlipressin_dose" min="0" max="20" step="0.5" value="2" />
+                <span class="val-display" id="terlipressin_dose-val">2.0</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="time_to_endoscophy_hours">Time to Endoscopy (hours)
+                <span class="info-icon" data-tip="Time from presentation to therapeutic endoscopy. Guidelines recommend &lt;12 hours.">&#9432;</span>
+              </label>
+              <div class="slider-wrap">
+                <input type="range" id="time_to_endoscophy_hours" min="0" max="48" step="1" value="12" />
+                <span class="val-display" id="time_to_endoscophy_hours-val">12</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============= RESULTS PANEL ============= -->
+      <section class="result-region">
+        <button class="btn-calculate" id="btn-run">&#128302; Calculate Risk (ML Model)</button>
+
+        <div id="error-banner" class="error-banner"></div>
+
+        <div id="results-content">
+          <div class="score-ring" id="score-ring" style="--p:0%">
+            <div class="score-core">
+              <span class="pct" id="mortality-pct">--</span>
+              <span class="label">1-Year Mortality</span>
+              <span class="sub-label" id="prediction-label"></span>
+            </div>
+          </div>
+
+          <div id="risk-badge" class="status-badge">Awaiting Input</div>
+
+          <!-- Confidence Interval -->
+          <div id="ci-section" style="display:none;">
+            <div style="font-size:0.72rem; color:var(--text-dim); margin-bottom:4px;">95% Confidence Interval</div>
+            <div class="ci-bar">
+              <div class="ci-bar-fill" id="ci-fill"></div>
+              <div class="ci-bar-marker" id="ci-marker"></div>
+            </div>
+            <div class="ci-text">
+              <span id="ci-lower">--</span>
+              <span id="ci-upper">--</span>
+            </div>
+          </div>
+
+          <div class="metrics-list">
+            <div class="metric-item">
+              <span class="m-label">MELD Score</span>
+              <div>
+                <span class="m-value" id="meld-score">--</span>
+                <span class="m-sub" id="meld-mort">3-mo mortality: --</span>
+              </div>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">MELD-Na</span>
+              <div>
+                <span class="m-value" id="meld-na-score">--</span>
+                <span class="m-sub">Sodium adjusted</span>
+              </div>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">Child-Pugh</span>
+              <div>
+                <span class="m-value" id="cp-score">--</span>
+                <span class="m-sub" id="cp-class">Class --</span>
+              </div>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">ALBI Score</span>
+              <div>
+                <span class="m-value" id="albi-score">--</span>
+                <span class="m-sub" id="albi-grade">Grade --</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model Comparison -->
+          <div id="comparison-section" style="display:none;">
+            <div style="font-size:0.72rem; color:var(--accent-primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Model Performance</div>
+            <table class="comparison-table">
+              <thead>
+                <tr><th>Model</th><th>AUC</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Random Forest (this model)</td><td>0.915</td></tr>
+                <tr><td>MELD-Na</td><td>0.742</td></tr>
+                <tr><td>MELD</td><td>0.726</td></tr>
+                <tr><td>Child-Pugh</td><td>0.685</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="btn-export" id="btn-export">&#128202; Export Results (JSON)</button>
+
+        <p style="font-size: 0.62rem; color: var(--text-dim); line-height: 1.5; text-align: center; margin-top: 8px;">
+          <strong>Citation:</strong> Rech MM, Soldera J, Corso LL et al. Development, Internal and Prospective validation of a machine learning model for the prediction of mortality in cirrhotic patients with acute esophageal variceal bleeding. <em>World J Hepatol</em>. 2025.<br>
+          <strong>Contact:</strong> mmrech@ucs.br
+        </p>
+      </section>
+    </div>
+
+    <section class="references-section">
+      <h3>&#128218; Clinical References</h3>
+      <ol>
+        <li>Kamath PS, et al. A model to predict survival in patients with end-stage liver disease. <em>Hepatology</em>. 2001;33(2):464-470.</li>
+        <li>Biggins SW, et al. Serum sodium predicts mortality in patients listed for liver transplantation. <em>Hepatology</em>. 2005;41(1):32-39.</li>
+        <li>Pugh RN, et al. Transection of the oesophagus for bleeding oesophageal varices. <em>Br J Surg</em>. 1973;60(8):646-649.</li>
+        <li>Johnson PJ, et al. Assessment of liver function in patients with hepatocellular carcinoma: the ALBI grade. <em>J Clin Oncol</em>. 2015;33(6):550-558.</li>
+        <li>Garcia-Tsao G, et al. Prevention and management of gastroesophageal varices and variceal hemorrhage in cirrhosis. <em>Hepatology</em>. 2007;46(3):922-938.</li>
+        <li>de Franchis R, et al. Baveno VII &ndash; Renewing consensus in portal hypertension. <em>J Hepatol</em>. 2022;76(4):959-974.</li>
+      </ol>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const API_BASE = window.location.origin;
+
+    function clamp(n, a, b) { return Math.min(Math.max(n, a), b); }
+
+    function syncDisplay(el) {
+      const out = $(el.id + '-val');
+      if (out) out.innerText = parseFloat(el.value).toFixed(el.step && el.step.includes('.') ? el.step.split('.')[1].length : 0);
+    }
+
+    // ============= TRADITIONAL SCORE CALCULATIONS (local) =============
+
+    function meldScore(bili, inr, creat) {
+      const b = Math.max(bili, 1);
+      const i = Math.max(inr, 1);
+      const c = Math.min(Math.max(creat, 1), 4.0);
+      let meld = 3.78 * Math.log(b) + 11.2 * Math.log(i) + 9.57 * Math.log(c) + 6.43;
+      return clamp(Math.round(meld), 6, 40);
+    }
+
+    function meldNaScore(meld, sodium) {
+      const s = clamp(sodium, 125, 137);
+      const delta = 137 - s;
+      let meldNa = meld + 1.32 * delta - (0.033 * meld * delta);
+      return clamp(Math.round(meldNa), 6, 40);
+    }
+
+    function childPugh(bili, alb, inr, asc) {
+      let pts = 0;
+      pts += (bili < 2) ? 1 : (bili <= 3 ? 2 : 3);
+      pts += (alb > 3.5) ? 1 : (alb >= 2.8 ? 2 : 3);
+      pts += (inr < 1.7) ? 1 : (inr <= 2.3 ? 2 : 3);
+      pts += (asc === 'no') ? 1 : 3;
+      // Encephalopathy not in the 34-feature model, default to 1 point
+      pts += 1;
+      const cls = (pts <= 6) ? 'A' : (pts <= 9 ? 'B' : 'C');
+      return { pts, cls };
+    }
+
+    function albiScore(albumin, bilirubin) {
+      const score = (Math.log10(bilirubin) * 0.66) + (albumin * -0.085);
+      let grade;
+      if (score <= -2.60) grade = '1 (Best)';
+      else if (score <= -1.39) grade = '2';
+      else grade = '3 (Worst)';
+      return { score: score.toFixed(2), grade };
+    }
+
+    // ============= GRADIO API CALL =============
+
+    async function callGradioAPI() {
+      // Collect all 34 inputs in the exact order the Gradio function expects
+      const data = [
+        parseInt($('age').value),                        // age
+        $('sex').value,                                  // sex
+        $('race').value,                                 // race
+        $('etiology_cirrosis').value,                    // etiology_cirrosis
+        $('hepatorenal_syndrome').value,                 // hepatorenal_syndrome
+        $('omeprazole').value,                           // omeprazole
+        $('spironolactone').value,                       // spironolactone
+        $('furosemide').value,                           // furosemide
+        $('propanolol').value,                           // propanolol
+        $('dialisis').value,                             // dialisis
+        $('portal_vein_thrombosis').value,               // portal_vein_thrombosis
+        $('ascitis').value,                              // ascitis
+        $('hepatocellular_carcinoma').value,             // hepatocellular_carcinoma
+        parseFloat($('albumin').value),                  // albumin
+        parseFloat($('total_bilirrubin').value),         // total_bilirrubin
+        parseFloat($('direct_bilirrubina').value),       // direct_bilirrubina
+        parseFloat($('inr').value),                      // inr
+        parseFloat($('creatinine').value),               // creatinine
+        parseFloat($('platelets').value),                // platelets
+        parseFloat($('ast').value),                      // ast
+        parseFloat($('alt').value),                      // alt
+        parseFloat($('hemoglobin').value),               // hemoglobin
+        parseFloat($('hematocrit').value),               // hematocrit
+        parseFloat($('leucocytes').value),               // leucocytes
+        parseFloat($('sodium').value),                   // sodium
+        parseFloat($('potassium').value),                // potassium
+        $('varices').value,                              // varices
+        $('red_wale_marks').value,                       // red_wale_marks
+        $('rupture_point').value,                        // rupture_point
+        $('active_bleeding').value,                      // active_bleeding
+        $('therapy').value,                              // therapy
+        parseFloat($('terlipressin_dose').value),        // terlipressin_dose
+        parseFloat($('time_to_endoscophy_hours').value), // time_to_endoscophy_hours
+        $('rebleeding').value                            // rebleeding
+      ];
+
+      // Gradio 4.x API: POST /call/predict_patient_outcome then GET event stream
+      const callResp = await fetch(`${API_BASE}/call/predict_patient_outcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data })
+      });
+
+      if (!callResp.ok) {
+        throw new Error(`API call failed: ${callResp.status} ${callResp.statusText}`);
+      }
+
+      const callResult = await callResp.json();
+      const eventId = callResult.event_id;
+
+      // Poll the event stream for the result
+      const resultResp = await fetch(`${API_BASE}/call/predict_patient_outcome/${eventId}`);
+      const text = await resultResp.text();
+
+      // Parse SSE response: find the "data:" line with the JSON array
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const payload = JSON.parse(line.substring(6));
+          return payload; // Array of 3 markdown strings
+        }
+      }
+      throw new Error('No data received from API');
+    }
+
+    // ============= PARSE ML OUTPUT =============
+
+    function parseMLOutput(mlMarkdown) {
+      const result = { probability: null, ciLower: null, ciUpper: null, prediction: null, riskCategory: null };
+
+      // Extract probability: "**Mortality Probability:** 45.2% (95% CI: 30.2% - 60.2%)"
+      const probMatch = mlMarkdown.match(/Mortality Probability:\*\*\s*([\d.]+)%\s*\(95% CI:\s*([\d.]+)%\s*-\s*([\d.]+)%\)/);
+      if (probMatch) {
+        result.probability = parseFloat(probMatch[1]) / 100;
+        result.ciLower = parseFloat(probMatch[2]) / 100;
+        result.ciUpper = parseFloat(probMatch[3]) / 100;
+      }
+
+      // Extract prediction
+      if (mlMarkdown.includes('Death within 1 year')) {
+        result.prediction = 'Death within 1 year';
+      } else {
+        result.prediction = 'Survival beyond 1 year';
+      }
+
+      // Extract risk category
+      const riskMatch = mlMarkdown.match(/(Low Risk|Moderate Risk|High Risk)/);
+      if (riskMatch) result.riskCategory = riskMatch[1];
+
+      return result;
+    }
+
+    function parseTraditionalScores(tradMarkdown) {
+      const result = { meld: null, meldNa: null, childPugh: null, cpClass: null };
+
+      const meldMatch = tradMarkdown.match(/MELD Score:\*\*\s*(\d+)/);
+      if (meldMatch) result.meld = parseInt(meldMatch[1]);
+
+      const meldNaMatch = tradMarkdown.match(/MELD-Na Score:\*\*\s*(\d+)/);
+      if (meldNaMatch) result.meldNa = parseInt(meldNaMatch[1]);
+
+      const cpMatch = tradMarkdown.match(/Child-Pugh Score:\*\*\s*(\d+)\s*\(Class\s*([ABC])\)/);
+      if (cpMatch) {
+        result.childPugh = parseInt(cpMatch[1]);
+        result.cpClass = cpMatch[2];
+      }
+
+      return result;
+    }
+
+    // ============= MAIN RENDER =============
+
+    async function render() {
+      const btn = $('btn-run');
+      const errorBanner = $('error-banner');
+      errorBanner.style.display = 'none';
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Calculating...';
+
+      try {
+        // Call the ML model API
+        const apiResult = await callGradioAPI();
+        const [mlOutput, tradOutput, compOutput] = apiResult;
+
+        const ml = parseMLOutput(mlOutput);
+        const trad = parseTraditionalScores(tradOutput);
+
+        // Animate results
+        const results = $('results-content');
+        results.classList.remove('fade-in');
+        void results.offsetWidth;
+        results.classList.add('fade-in');
+
+        // Update mortality display
+        if (ml.probability !== null) {
+          const pct = (ml.probability * 100).toFixed(1);
+          $('mortality-pct').innerText = pct + '%';
+          $('score-ring').style.setProperty('--p', pct + '%');
+          $('prediction-label').innerText = ml.prediction || '';
+
+          // Color the ring based on risk
+          if (ml.probability < 0.3) {
+            $('score-ring').style.setProperty('--ring-color', 'var(--success)');
+          } else if (ml.probability < 0.6) {
+            $('score-ring').style.setProperty('--ring-color', 'var(--warning)');
+          } else {
+            $('score-ring').style.setProperty('--ring-color', 'var(--danger)');
+          }
+
+          // Confidence interval
+          if (ml.ciLower !== null) {
+            $('ci-section').style.display = 'block';
+            $('ci-lower').innerText = (ml.ciLower * 100).toFixed(1) + '%';
+            $('ci-upper').innerText = (ml.ciUpper * 100).toFixed(1) + '%';
+            $('ci-fill').style.left = (ml.ciLower * 100) + '%';
+            $('ci-fill').style.width = ((ml.ciUpper - ml.ciLower) * 100) + '%';
+            $('ci-marker').style.left = (ml.probability * 100) + '%';
+          }
+        }
+
+        // Risk badge
+        const badge = $('risk-badge');
+        if (ml.riskCategory === 'Low Risk') {
+          badge.innerText = 'Low Risk';
+          badge.className = 'status-badge status-low';
+        } else if (ml.riskCategory === 'Moderate Risk') {
+          badge.innerText = 'Moderate Risk';
+          badge.className = 'status-badge status-mid';
+        } else {
+          badge.innerText = 'High Risk';
+          badge.className = 'status-badge status-high';
+        }
+
+        // Traditional scores — use API values if available, else compute locally
+        const bili = parseFloat($('total_bilirrubin').value);
+        const inr = parseFloat($('inr').value);
+        const creat = parseFloat($('creatinine').value);
+        const sod = parseFloat($('sodium').value);
+        const alb = parseFloat($('albumin').value);
+        const asc = $('ascitis').value;
+
+        const localMeld = meldScore(bili, inr, creat);
+        const localMeldNa = meldNaScore(localMeld, sod);
+        const localCp = childPugh(bili, alb, inr, asc);
+        const localAlbi = albiScore(alb, bili);
+
+        $('meld-score').innerText = trad.meld || localMeld;
+        $('meld-na-score').innerText = trad.meldNa || localMeldNa;
+        $('cp-score').innerText = trad.childPugh || localCp.pts;
+        $('cp-class').innerText = 'Class ' + (trad.cpClass || localCp.cls);
+        $('albi-score').innerText = localAlbi.score;
+        $('albi-grade').innerText = 'Grade ' + localAlbi.grade;
+
+        const meldVal = trad.meld || localMeld;
+        const meldMort = meldVal < 10 ? '<10%' : meldVal < 20 ? '10-19%' : meldVal < 30 ? '20-50%' : '>50%';
+        $('meld-mort').innerText = '3-mo mortality: ' + meldMort;
+
+        // Show comparison
+        $('comparison-section').style.display = 'block';
+
+      } catch (err) {
+        console.error('API Error:', err);
+        errorBanner.textContent = '⚠ API Error: ' + err.message + '. Falling back to local score calculation.';
+        errorBanner.style.display = 'block';
+
+        // Fallback: compute local scores only
+        const bili = parseFloat($('total_bilirrubin').value);
+        const inr = parseFloat($('inr').value);
+        const creat = parseFloat($('creatinine').value);
+        const sod = parseFloat($('sodium').value);
+        const alb = parseFloat($('albumin').value);
+        const asc = $('ascitis').value;
+
+        const meld = meldScore(bili, inr, creat);
+        const meldNa = meldNaScore(meld, sod);
+        const cp = childPugh(bili, alb, inr, asc);
+        const albi = albiScore(alb, bili);
+
+        $('meld-score').innerText = meld;
+        $('meld-na-score').innerText = meldNa;
+        $('cp-score').innerText = cp.pts;
+        $('cp-class').innerText = 'Class ' + cp.cls;
+        $('albi-score').innerText = albi.score;
+        $('albi-grade').innerText = 'Grade ' + albi.grade;
+        $('meld-mort').innerText = '3-mo mortality: ' + (meld < 10 ? '<10%' : meld < 20 ? '10-19%' : meld < 30 ? '20-50%' : '>50%');
+
+        $('mortality-pct').innerText = 'N/A';
+        $('risk-badge').innerText = 'API Unavailable';
+        $('risk-badge').className = 'status-badge';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔮 Calculate Risk (ML Model)';
+      }
+    }
+
+    // ============= PRESETS =============
+
+    const PRESETS = {
+      compensated: {
+        age: 55, sex: 'male', race: 'white', etiology_cirrosis: 'alcohol',
+        hepatorenal_syndrome: 'no', omeprazole: 'no', spironolactone: 'no', furosemide: 'no',
+        propanolol: 'yes', dialisis: 'no', portal_vein_thrombosis: 'no',
+        ascitis: 'no', hepatocellular_carcinoma: 'no',
+        albumin: 3.8, total_bilirrubin: 1.2, direct_bilirrubina: 0.3, inr: 1.1,
+        creatinine: 0.9, platelets: 180, ast: 28, alt: 22,
+        hemoglobin: 14, hematocrit: 42, leucocytes: 5.5, sodium: 140, potassium: 4.2,
+        varices: 'yes', red_wale_marks: 'no', rupture_point: 'no',
+        active_bleeding: 'no', rebleeding: 'no', therapy: 'Banding',
+        terlipressin_dose: 2, time_to_endoscophy_hours: 8
+      },
+      decompensated: {
+        age: 62, sex: 'male', race: 'white', etiology_cirrosis: 'alcohol',
+        hepatorenal_syndrome: 'no', omeprazole: 'yes', spironolactone: 'yes', furosemide: 'yes',
+        propanolol: 'no', dialisis: 'no', portal_vein_thrombosis: 'no',
+        ascitis: 'yes', hepatocellular_carcinoma: 'no',
+        albumin: 3.0, total_bilirrubin: 2.8, direct_bilirrubina: 1.2, inr: 1.6,
+        creatinine: 1.3, platelets: 95, ast: 52, alt: 38,
+        hemoglobin: 10.5, hematocrit: 32, leucocytes: 7.2, sodium: 134, potassium: 4.5,
+        varices: 'yes', red_wale_marks: 'yes', rupture_point: 'no',
+        active_bleeding: 'yes', rebleeding: 'no', therapy: 'Banding',
+        terlipressin_dose: 2, time_to_endoscophy_hours: 14
+      },
+      advanced: {
+        age: 58, sex: 'male', race: 'white', etiology_cirrosis: 'alcohol+hcv',
+        hepatorenal_syndrome: 'no', omeprazole: 'yes', spironolactone: 'yes', furosemide: 'yes',
+        propanolol: 'no', dialisis: 'no', portal_vein_thrombosis: 'yes',
+        ascitis: 'yes', hepatocellular_carcinoma: 'no',
+        albumin: 2.4, total_bilirrubin: 5.2, direct_bilirrubina: 2.8, inr: 2.4,
+        creatinine: 2.1, platelets: 55, ast: 120, alt: 85,
+        hemoglobin: 8.5, hematocrit: 26, leucocytes: 12.0, sodium: 128, potassium: 5.1,
+        varices: 'yes', red_wale_marks: 'yes', rupture_point: 'yes',
+        active_bleeding: 'yes', rebleeding: 'yes', therapy: 'Banding',
+        terlipressin_dose: 4, time_to_endoscophy_hours: 18
+      },
+      hrs: {
+        age: 64, sex: 'male', race: 'white', etiology_cirrosis: 'alcohol',
+        hepatorenal_syndrome: 'yes', omeprazole: 'yes', spironolactone: 'yes', furosemide: 'yes',
+        propanolol: 'no', dialisis: 'yes', portal_vein_thrombosis: 'no',
+        ascitis: 'yes', hepatocellular_carcinoma: 'no',
+        albumin: 2.7, total_bilirrubin: 3.5, direct_bilirrubina: 1.8, inr: 1.8,
+        creatinine: 3.2, platelets: 72, ast: 68, alt: 45,
+        hemoglobin: 9.2, hematocrit: 28, leucocytes: 9.5, sodium: 130, potassium: 5.3,
+        varices: 'yes', red_wale_marks: 'yes', rupture_point: 'no',
+        active_bleeding: 'yes', rebleeding: 'no', therapy: 'Banding',
+        terlipressin_dose: 4, time_to_endoscophy_hours: 10
+      }
+    };
+
+    function loadPreset(name) {
+      if (!name || !PRESETS[name]) return;
+      const preset = PRESETS[name];
+      Object.keys(preset).forEach(key => {
+        const el = $(key);
+        if (el) {
+          el.value = preset[key];
+          if (el.type === 'range') syncDisplay(el);
+        }
+      });
+      render();
+    }
+
+    // ============= EXPORT =============
+
+    function exportResults() {
+      const timestamp = new Date().toISOString();
+      const allInputIds = [
+        'age','sex','race','etiology_cirrosis','hepatorenal_syndrome','omeprazole',
+        'spironolactone','furosemide','propanolol','dialisis','portal_vein_thrombosis',
+        'ascitis','hepatocellular_carcinoma','albumin','total_bilirrubin',
+        'direct_bilirrubina','inr','creatinine','platelets','ast','alt','hemoglobin',
+        'hematocrit','leucocytes','sodium','potassium','varices','red_wale_marks',
+        'rupture_point','active_bleeding','therapy','terlipressin_dose',
+        'time_to_endoscophy_hours','rebleeding'
+      ];
+
+      const inputs = {};
+      allInputIds.forEach(id => {
+        const el = $(id);
+        if (el) {
+          const val = el.value;
+          inputs[id] = isNaN(val) || val === '' ? val : parseFloat(val);
+        }
+      });
+
+      const data = {
+        timestamp,
+        disclaimer: "FOR RESEARCH/EDUCATIONAL USE ONLY - NOT MEDICAL ADVICE",
+        calculatorVersion: "3.0-ML-Clinical",
+        model: "Random Forest with Isotonic Calibration (AUC 0.915)",
+        inputs,
+        results: {
+          estimatedMortality1Year: $('mortality-pct').innerText,
+          riskCategory: $('risk-badge').innerText,
+          confidenceInterval: {
+            lower: $('ci-lower').innerText,
+            upper: $('ci-upper').innerText
+          },
+          scores: {
+            MELD: $('meld-score').innerText,
+            MELDNa: $('meld-na-score').innerText,
+            ChildPughScore: $('cp-score').innerText,
+            ChildPughClass: $('cp-class').innerText.replace('Class ', ''),
+            ALBIScore: $('albi-score').innerText,
+            ALBIGrade: $('albi-grade').innerText.replace('Grade ', '')
+          }
+        },
+        citation: "Rech MM, Soldera J, Corso LL et al. World J Hepatol. 2025."
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `evb_ml_risk_assessment_${timestamp.split('T')[0]}_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ============= INITIALIZATION =============
+
+    function wireLiveUpdates() {
+      const allIds = [
+        'age','sex','race','etiology_cirrosis','hepatorenal_syndrome','omeprazole',
+        'spironolactone','furosemide','propanolol','dialisis','portal_vein_thrombosis',
+        'ascitis','hepatocellular_carcinoma','albumin','total_bilirrubin',
+        'direct_bilirrubina','inr','creatinine','platelets','ast','alt','hemoglobin',
+        'hematocrit','leucocytes','sodium','potassium','varices','red_wale_marks',
+        'rupture_point','active_bleeding','therapy','terlipressin_dose',
+        'time_to_endoscophy_hours','rebleeding'
+      ];
+
+      allIds.forEach(id => {
+        const el = $(id);
+        if (!el) return;
+        const handler = () => {
+          if (el.type === 'range') syncDisplay(el);
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+        if (el.type === 'range') syncDisplay(el);
+      });
+
+      $('btn-run').addEventListener('click', render);
+      $('btn-export').addEventListener('click', exportResults);
+    }
+
+    window.addEventListener('load', () => {
+      wireLiveUpdates();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#030708" />
+  <title>EVB Prognosis — Mobile</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent: #00d2ff;
+      --accent2: #92fe9d;
+      --text: #e0e0e0;
+      --text-dim: #999;
+      --danger: #ff4b2b;
+      --warning: #f9d423;
+      --success: #00f2fe;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: #030708;
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+
+    /* Vapor background */
+    .vapor { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .vapor-cloud {
+      position: absolute; border-radius: 50%;
+      filter: blur(60px); opacity: 0.12;
+      animation: drift 20s infinite alternate ease-in-out;
+    }
+    .c1 { width: 400px; height: 400px; background: var(--accent); top: -10%; left: -20%; }
+    .c2 { width: 350px; height: 350px; background: var(--accent2); bottom: -10%; right: -20%; animation-delay: -5s; }
+    .c3 { width: 250px; height: 250px; background: #8a2be2; top: 40%; left: 20%; animation-delay: -10s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(60px,30px) scale(1.15); } }
+
+    /* Header */
+    .header {
+      padding: 20px 20px 16px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(3, 7, 8, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 210, 255, 0.08);
+      border: 1px solid rgba(0, 210, 255, 0.2);
+      border-radius: 16px;
+      padding: 3px 10px;
+      font-size: 0.62rem;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+    .header .badge .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin: 12px 16px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.7rem;
+      color: #ff8a8a;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Sections */
+    .section {
+      margin: 12px 16px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .section-header h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .section-header .chevron {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      transition: transform 0.3s;
+    }
+
+    .section-body {
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .section.collapsed .section-body { display: none; }
+    .section.collapsed .chevron { transform: rotate(-90deg); }
+
+    /* Preset row */
+    .preset-row {
+      padding: 0 16px 12px;
+    }
+    .preset-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    /* Input groups */
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .input-group label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px; height: 16px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      font-size: 9px;
+      cursor: help;
+      flex-shrink: 0;
+    }
+
+    select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      -webkit-appearance: none;
+      min-height: 44px; /* iOS tap target */
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Slider */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      background: var(--glass-border);
+      border-radius: 3px;
+      -webkit-appearance: none;
+      outline: none;
+      padding: 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px; height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--accent);
+      cursor: pointer;
+    }
+
+    .val-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--accent);
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* Calculate button */
+    .btn-calculate {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 16px 16px;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      min-height: 52px;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+    .btn-calculate:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-calculate:disabled { opacity: 0.5; cursor: wait; transform: none; }
+
+    /* Error banner */
+    .error-banner {
+      margin: 0 16px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      color: #ff8a8a;
+      display: none;
+    }
+
+    /* Results */
+    .results-section {
+      margin: 12px 16px 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+    }
+
+    .score-ring {
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(0,0,0,0.55) 56%, transparent 58%),
+        conic-gradient(var(--ring-color, var(--accent)) var(--p, 0%), rgba(255,255,255,0.08) 0);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+      transition: all 0.6s ease;
+    }
+
+    .score-core {
+      width: 125px; height: 125px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, rgba(0,210,255,0.08), transparent);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .score-core .pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .score-core .label {
+      margin-top: 4px;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .status-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      width: fit-content;
+      margin: -16px auto 16px;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+    .status-low { background: var(--success); color: #000; }
+    .status-mid { background: var(--warning); color: #000; }
+    .status-high { background: var(--danger); color: #fff; }
+
+    /* CI bar */
+    .ci-section { margin: 16px 0; display: none; }
+    .ci-label { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 6px; }
+    .ci-bar {
+      width: 100%; height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      position: relative;
+    }
+    .ci-bar-fill {
+      position: absolute; height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+      opacity: 0.5;
+      transition: all 0.5s;
+    }
+    .ci-bar-marker {
+      position: absolute;
+      width: 3px; height: 14px; top: -3px;
+      background: #fff;
+      border-radius: 2px;
+      transition: all 0.5s;
+    }
+    .ci-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 4px;
+    }
+
+    /* Score cards */
+    .scores-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .score-card {
+      background: rgba(0, 210, 255, 0.06);
+      border: 1px solid rgba(0, 210, 255, 0.15);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .score-card .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .score-card .name {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .score-card .sub {
+      font-size: 0.58rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    /* Comparison table */
+    .comparison-section { margin-top: 20px; display: none; }
+    .comparison-section h3 {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.68rem;
+    }
+    .comparison-table th {
+      padding: 6px 4px;
+      text-align: left;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .comparison-table td {
+      padding: 6px 4px;
+      color: var(--text-dim);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .comparison-table .highlight td {
+      color: var(--accent);
+      font-weight: 600;
+      background: rgba(0,210,255,0.06);
+    }
+
+    /* Export button */
+    .btn-export {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .btn-export:active { border-color: var(--accent); color: var(--accent); }
+
+    /* Footer */
+    .footer {
+      padding: 20px 16px 40px;
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+
+    /* Animations */
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Back link */
+    .back-link {
+      display: block;
+      margin: 12px 16px;
+      font-size: 0.78rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* SHAP Feature Importance */
+    .shap-section {
+      margin: 16px 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--glass-border);
+    }
+    .shap-section h3 {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .shap-subtitle {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+    .shap-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 3px 0;
+    }
+    .shap-bar-label {
+      width: 90px;
+      text-align: right;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+    .shap-bar-track {
+      flex: 1;
+      height: 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+    .shap-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+    .shap-bar-value {
+      width: 50px;
+      font-size: 0.52rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .shap-legend {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      font-size: 0.55rem;
+      margin-bottom: 8px;
+    }
+    .shap-summary {
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+    }
+    .shap-center-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* PDP Interactive Section */
+    .pdp-section {
+      margin: 16px 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--glass-border);
+    }
+    .pdp-section h3 {
+      font-size: 0.7rem;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .pdp-subtitle {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+    .pdp-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      -webkit-appearance: none;
+      margin-bottom: 12px;
+    }
+    .pdp-select:focus {
+      border-color: var(--accent2);
+    }
+    .pdp-chart-container {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .pdp-chart-container svg {
+      width: 100%;
+      height: 100%;
+    }
+    .pdp-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+    }
+    .pdp-tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid var(--accent2);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.6rem;
+      color: var(--text);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+      display: none;
+    }
+    .pdp-axis-label {
+      font-size: 0.55rem;
+      fill: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .pdp-info {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="vapor">
+    <div class="vapor-cloud c1"></div>
+    <div class="vapor-cloud c2"></div>
+    <div class="vapor-cloud c3"></div>
+  </div>
+
+  <!-- Sticky header -->
+  <div class="header">
+    <h1>EVB Prognosis</h1>
+    <div class="badge">
+      <span class="dot"></span>
+      Random Forest &mdash; AUC 0.915
+    </div>
+  </div>
+
+  <a class="back-link" href="/file=index.html">&larr; Back to launcher</a>
+
+  <div class="disclaimer">
+    <strong>RESEARCH USE ONLY</strong> &mdash; Not for clinical decision-making. Always rely on clinical judgment.
+  </div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="preset-row" style="padding-top:14px;">
+      <select class="preset-select" id="preset-select" onchange="loadPreset(this.value); this.value='';">
+        <option value="">Load Clinical Scenario...</option>
+        <option value="compensated">Compensated Cirrhosis (Child A)</option>
+        <option value="decompensated">Decompensated Cirrhosis (Child B)</option>
+        <option value="advanced">Advanced Disease (Child C)</option>
+        <option value="hrs">Hepatorenal Syndrome</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Section 1: Demographics -->
+  <div class="section" id="sec-demo">
+    <div class="section-header" onclick="toggleSection('sec-demo')">
+      <h2>1. Demographics</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="input-group">
+        <label>Age</label>
+        <div class="slider-wrap">
+          <input type="range" id="age" min="18" max="100" value="50" oninput="syncVal(this)" />
+          <span class="val-display" id="age-val">50</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Sex</label>
+        <select id="sex"><option value="male">Male</option><option value="female">Female</option></select>
+      </div>
+      <div class="input-group">
+        <label>Race <span class="info-icon" title="Included per training data. May reflect social determinants.">&#9432;</span></label>
+        <select id="race"><option value="white">White</option><option value="black">Black</option><option value="asian">Asian</option><option value="other">Other</option></select>
+      </div>
+      <div class="input-group">
+        <label>Etiology of Cirrhosis</label>
+        <select id="etiology_cirrosis"><option value="alcohol">Alcohol</option><option value="hcv">HCV</option><option value="alcohol+hcv">Alcohol + HCV</option><option value="other">Other</option></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Clinical Status -->
+  <div class="section" id="sec-clinical">
+    <div class="section-header" onclick="toggleSection('sec-clinical')">
+      <h2>2. Clinical Status</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="input-group"><label>Ascites</label><select id="ascitis"><option value="no">No</option><option value="yes" selected>Yes</option></select></div>
+      <div class="input-group"><label>Hepatocellular Carcinoma</label><select id="hepatocellular_carcinoma"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Hepatorenal Syndrome</label><select id="hepatorenal_syndrome"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Portal Vein Thrombosis</label><select id="portal_vein_thrombosis"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+    </div>
+  </div>
+
+  <!-- Section 3: Medications -->
+  <div class="section collapsed" id="sec-meds">
+    <div class="section-header" onclick="toggleSection('sec-meds')">
+      <h2>3. Medications</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="input-group"><label>Omeprazole</label><select id="omeprazole"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Spironolactone</label><select id="spironolactone"><option value="no">No</option><option value="yes" selected>Yes</option></select></div>
+      <div class="input-group"><label>Furosemide</label><select id="furosemide"><option value="no">No</option><option value="yes" selected>Yes</option></select></div>
+      <div class="input-group"><label>Propranolol</label><select id="propanolol"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Dialysis</label><select id="dialisis"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+    </div>
+  </div>
+
+  <!-- Section 4: Laboratory Values -->
+  <div class="section" id="sec-labs">
+    <div class="section-header" onclick="toggleSection('sec-labs')">
+      <h2>4. Laboratory Values</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="input-group"><label>Albumin (g/dL)</label><div class="slider-wrap"><input type="range" id="albumin" min="1" max="5" step="0.1" value="3.5" oninput="syncVal(this)" /><span class="val-display" id="albumin-val">3.5</span></div></div>
+      <div class="input-group"><label>Total Bilirubin (mg/dL)</label><div class="slider-wrap"><input type="range" id="total_bilirrubin" min="0.1" max="30" step="0.1" value="2.0" oninput="syncVal(this)" /><span class="val-display" id="total_bilirrubin-val">2.0</span></div></div>
+      <div class="input-group"><label>Direct Bilirubin (mg/dL)</label><div class="slider-wrap"><input type="range" id="direct_bilirrubina" min="0.1" max="10" step="0.1" value="0.5" oninput="syncVal(this)" /><span class="val-display" id="direct_bilirrubina-val">0.5</span></div></div>
+      <div class="input-group"><label>INR</label><div class="slider-wrap"><input type="range" id="inr" min="0.5" max="5" step="0.1" value="1.2" oninput="syncVal(this)" /><span class="val-display" id="inr-val">1.2</span></div></div>
+      <div class="input-group"><label>Creatinine (mg/dL)</label><div class="slider-wrap"><input type="range" id="creatinine" min="0.1" max="10" step="0.1" value="1.0" oninput="syncVal(this)" /><span class="val-display" id="creatinine-val">1.0</span></div></div>
+      <div class="input-group"><label>Sodium (mEq/L)</label><div class="slider-wrap"><input type="range" id="sodium" min="120" max="160" step="1" value="140" oninput="syncVal(this)" /><span class="val-display" id="sodium-val">140</span></div></div>
+      <div class="input-group"><label>Potassium (mEq/L)</label><div class="slider-wrap"><input type="range" id="potassium" min="2" max="6" step="0.1" value="4.0" oninput="syncVal(this)" /><span class="val-display" id="potassium-val">4.0</span></div></div>
+      <div class="input-group"><label>Platelets (&times;10&sup3;/&mu;L)</label><div class="slider-wrap"><input type="range" id="platelets" min="10" max="500" step="1" value="150" oninput="syncVal(this)" /><span class="val-display" id="platelets-val">150</span></div></div>
+      <div class="input-group"><label>Hemoglobin (g/dL)</label><div class="slider-wrap"><input type="range" id="hemoglobin" min="5" max="20" step="0.1" value="13" oninput="syncVal(this)" /><span class="val-display" id="hemoglobin-val">13.0</span></div></div>
+      <div class="input-group"><label>Hematocrit (%)</label><div class="slider-wrap"><input type="range" id="hematocrit" min="15" max="60" step="1" value="40" oninput="syncVal(this)" /><span class="val-display" id="hematocrit-val">40</span></div></div>
+      <div class="input-group"><label>Leukocytes (&times;10&sup3;/&mu;L)</label><div class="slider-wrap"><input type="range" id="leucocytes" min="1" max="50" step="0.1" value="6.0" oninput="syncVal(this)" /><span class="val-display" id="leucocytes-val">6.0</span></div></div>
+      <div class="input-group"><label>AST (U/L)</label><div class="slider-wrap"><input type="range" id="ast" min="10" max="500" step="1" value="35" oninput="syncVal(this)" /><span class="val-display" id="ast-val">35</span></div></div>
+      <div class="input-group"><label>ALT (U/L)</label><div class="slider-wrap"><input type="range" id="alt" min="10" max="500" step="1" value="25" oninput="syncVal(this)" /><span class="val-display" id="alt-val">25</span></div></div>
+    </div>
+  </div>
+
+  <!-- Section 5: Endoscopic Findings -->
+  <div class="section" id="sec-endo">
+    <div class="section-header" onclick="toggleSection('sec-endo')">
+      <h2>5. Endoscopic Findings</h2>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="section-body">
+      <div class="input-group"><label>Varices</label><select id="varices"><option value="no">No</option><option value="yes" selected>Yes</option></select></div>
+      <div class="input-group"><label>Red Wale Marks</label><select id="red_wale_marks"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Rupture Point</label><select id="rupture_point"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Active Bleeding</label><select id="active_bleeding"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Rebleeding</label><select id="rebleeding"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+      <div class="input-group"><label>Therapy</label><select id="therapy"><option value="Banding" selected>Banding</option><option value="Sclerotherapy">Sclerotherapy</option><option value="No therapy">No therapy</option></select></div>
+      <div class="input-group"><label>Terlipressin Dose (mg)</label><div class="slider-wrap"><input type="range" id="terlipressin_dose" min="0" max="20" step="0.5" value="2" oninput="syncVal(this)" /><span class="val-display" id="terlipressin_dose-val">2.0</span></div></div>
+      <div class="input-group"><label>Time to Endoscopy (hours)</label><div class="slider-wrap"><input type="range" id="time_to_endoscophy_hours" min="0" max="48" step="1" value="12" oninput="syncVal(this)" /><span class="val-display" id="time_to_endoscophy_hours-val">12</span></div></div>
+    </div>
+  </div>
+
+  <!-- Calculate button -->
+  <button class="btn-calculate" id="btn-run" onclick="render()">&#9889; Calculate Risk</button>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- Results -->
+  <div class="results-section" id="results-section" style="display:none;">
+    <div id="results-content">
+      <div class="score-ring" id="score-ring" style="--p:0%">
+        <div class="score-core">
+          <span class="pct" id="mortality-pct">—</span>
+          <span class="label">1-Year Mortality</span>
+        </div>
+      </div>
+      <div class="status-badge" id="risk-badge">—</div>
+
+      <div class="ci-section" id="ci-section">
+        <div class="ci-label">95% Confidence Interval</div>
+        <div class="ci-bar">
+          <div class="ci-bar-fill" id="ci-fill"></div>
+          <div class="ci-bar-marker" id="ci-marker"></div>
+        </div>
+        <div class="ci-text">
+          <span id="ci-lower">—</span>
+          <span id="ci-upper">—</span>
+        </div>
+      </div>
+
+      <div class="scores-grid">
+        <div class="score-card"><div class="val" id="meld-score">—</div><div class="name">MELD</div><div class="sub" id="meld-mort"></div></div>
+        <div class="score-card"><div class="val" id="meld-na-score">—</div><div class="name">MELD-Na</div></div>
+        <div class="score-card"><div class="val" id="cp-score">—</div><div class="name">Child-Pugh</div><div class="sub" id="cp-class"></div></div>
+        <div class="score-card"><div class="val" id="albi-score">—</div><div class="name">ALBI</div><div class="sub" id="albi-grade"></div></div>
+      </div>
+
+      <div class="comparison-section" id="comparison-section">
+        <h3>Model Comparison</h3>
+        <table class="comparison-table">
+          <tr><th>Model</th><th>AUC</th><th>Sens.</th><th>Spec.</th></tr>
+          <tr class="highlight"><td>Random Forest</td><td>0.915</td><td>80%</td><td>86%</td></tr>
+          <tr><td>MELD-Na</td><td>0.742</td><td>69%</td><td>72%</td></tr>
+          <tr><td>MELD</td><td>0.726</td><td>67%</td><td>70%</td></tr>
+          <tr><td>Child-Pugh</td><td>0.685</td><td>63%</td><td>67%</td></tr>
+        </table>
+      </div>
+
+      <button class="btn-export" id="btn-export" onclick="exportResults()">&#128190; Export JSON</button>
+
+      <!-- SHAP Global Feature Importance -->
+      <div class="shap-section" id="shap-global-section" style="display:none;">
+        <h3>Global Feature Importance</h3>
+        <div class="shap-subtitle">Mean |SHAP| across representative patients (prospective-validated model)</div>
+        <div id="shap-global-bars"></div>
+      </div>
+
+      <!-- SHAP Patient-Specific -->
+      <div class="shap-section" id="shap-patient-section" style="display:none;">
+        <h3>This Patient's Feature Contributions</h3>
+        <div class="shap-subtitle" id="shap-patient-subtitle">How each feature shifts risk from the population baseline</div>
+        <div class="shap-legend">
+          <span style="color:var(--danger);">Red = increases risk &rarr;</span>
+          <span style="color:rgba(255,255,255,0.2);">|</span>
+          <span style="color:var(--accent2);">&larr; Green = decreases risk</span>
+        </div>
+        <div id="shap-patient-bars"></div>
+        <div class="shap-summary" id="shap-patient-summary"></div>
+      </div>
+
+      <!-- Interactive PDP -->
+      <div class="pdp-section" id="pdp-section" style="display:none;">
+        <h3>Partial Dependence Plots</h3>
+        <div class="pdp-subtitle">How each feature affects predicted mortality probability (holding other features constant)</div>
+        <select class="pdp-select" id="pdp-feature-select" onchange="loadPDP(this.value)">
+          <option value="">Select a feature to explore...</option>
+        </select>
+        <div class="pdp-chart-container" id="pdp-chart-container" style="display:none;">
+          <div class="pdp-loading" id="pdp-loading">Loading...</div>
+          <svg id="pdp-svg" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="pdp-tooltip" id="pdp-tooltip"></div>
+        </div>
+        <div class="pdp-info" id="pdp-info"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><strong>Citation:</strong> Rech MM, Soldera J, Corso LL et al. <em>World J Hepatol</em>. 2025.</p>
+    <p style="margin-top:6px;"><a href="mailto:mmrech@ucs.br">mmrech@ucs.br</a> | v6.0 Mobile (SHAP + PDP)</p>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API_BASE = window.location.origin;
+
+    function syncVal(el) {
+      const disp = $(el.id + '-val');
+      if (disp) {
+        const step = parseFloat(el.step) || 1;
+        disp.textContent = step < 1 ? parseFloat(el.value).toFixed(1) : el.value;
+      }
+    }
+
+    function toggleSection(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    // Local score calculations
+    function meldScore(bil, inr, cr) {
+      bil = Math.max(bil, 1); inr = Math.max(inr, 1); cr = Math.max(cr, 1);
+      return Math.round(Math.min(40, Math.max(6, 3.78*Math.log(bil) + 11.2*Math.log(inr) + 9.57*Math.log(cr) + 6.43)));
+    }
+    function meldNaScore(meld, na) {
+      na = Math.min(137, Math.max(125, na));
+      return Math.round(Math.min(40, Math.max(6, meld + 1.32*(137-na) - 0.033*meld*(137-na))));
+    }
+    function childPugh(bil, alb, inr, asc) {
+      let s = 0;
+      s += bil<2?1:(bil<=3?2:3);
+      s += alb>3.5?1:(alb>=2.8?2:3);
+      s += inr<1.7?1:(inr<=2.3?2:3);
+      s += asc==='no'?1:2;
+      s += 1;
+      return { pts: s, cls: s<=6?'A':(s<=9?'B':'C') };
+    }
+    function albiScore(alb, bil) {
+      const bilUmol = bil * 17.1;
+      const albGl = alb * 10;
+      const score = (Math.log10(bilUmol) * 0.66) + (albGl * -0.085);
+      const grade = score <= -2.60 ? '1' : (score <= -1.39 ? '2' : '3');
+      return { score: score.toFixed(2), grade };
+    }
+
+    async function callGradioAPI() {
+      const data = [
+        parseInt($('age').value),
+        $('sex').value, $('race').value, $('etiology_cirrosis').value,
+        $('hepatorenal_syndrome').value, $('omeprazole').value,
+        $('spironolactone').value, $('furosemide').value,
+        $('propanolol').value, $('dialisis').value,
+        $('portal_vein_thrombosis').value, $('ascitis').value,
+        $('hepatocellular_carcinoma').value,
+        parseFloat($('albumin').value), parseFloat($('total_bilirrubin').value),
+        parseFloat($('direct_bilirrubina').value), parseFloat($('inr').value),
+        parseFloat($('creatinine').value), parseFloat($('platelets').value),
+        parseFloat($('ast').value), parseFloat($('alt').value),
+        parseFloat($('hemoglobin').value), parseFloat($('hematocrit').value),
+        parseFloat($('leucocytes').value), parseFloat($('sodium').value),
+        parseFloat($('potassium').value),
+        $('varices').value, $('red_wale_marks').value,
+        $('rupture_point').value, $('active_bleeding').value,
+        $('therapy').value,
+        parseFloat($('terlipressin_dose').value),
+        parseFloat($('time_to_endoscophy_hours').value),
+        $('rebleeding').value
+      ];
+
+      const callResp = await fetch(`${API_BASE}/call/predict_patient_outcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data })
+      });
+      if (!callResp.ok) throw new Error(`API: ${callResp.status}`);
+      const callResult = await callResp.json();
+      const resultResp = await fetch(`${API_BASE}/call/predict_patient_outcome/${callResult.event_id}`);
+      const text = await resultResp.text();
+      for (const line of text.split('\n')) {
+        if (line.startsWith('data: ')) return JSON.parse(line.substring(6));
+      }
+      throw new Error('No data from API');
+    }
+
+    // SHAP rendering functions
+    function renderGlobalShapBars(htmlContent) {
+      const container = $('shap-global-bars');
+      if (!htmlContent || htmlContent.includes('not available')) {
+        $('shap-global-section').style.display = 'none';
+        return;
+      }
+      // The API returns pre-rendered HTML from the Gradio backend
+      container.innerHTML = htmlContent;
+      $('shap-global-section').style.display = 'block';
+    }
+
+    function renderPatientShapBars(htmlContent) {
+      const container = $('shap-patient-bars');
+      if (!htmlContent || htmlContent.includes('not available')) {
+        $('shap-patient-section').style.display = 'none';
+        return;
+      }
+      // The API returns pre-rendered HTML from the Gradio backend
+      container.innerHTML = htmlContent;
+      $('shap-patient-section').style.display = 'block';
+    }
+
+    function parseMLOutput(md) {
+      const r = { probability: null, ciLower: null, ciUpper: null, prediction: null, riskCategory: null };
+      // Try HTML format first (v5 returns styled HTML)
+      const htmlPct = md.match(/>([\d.]+)%<\/div>\s*<div[^>]*>1-Year Mortality/);
+      if (htmlPct) {
+        r.probability = parseFloat(htmlPct[1]) / 100;
+      }
+      // Try markdown format as fallback
+      if (r.probability === null) {
+        const pm = md.match(/Mortality Probability:\*\*\s*([\d.]+)%\s*\(95% CI:\s*([\d.]+)%\s*-\s*([\d.]+)%\)/);
+        if (pm) { r.probability = parseFloat(pm[1])/100; r.ciLower = parseFloat(pm[2])/100; r.ciUpper = parseFloat(pm[3])/100; }
+      }
+      // Parse CI from HTML format
+      const ciMatch = md.match(/95% CI:\s*([\d.]+)%\s*-\s*([\d.]+)%/);
+      if (ciMatch) { r.ciLower = parseFloat(ciMatch[1])/100; r.ciUpper = parseFloat(ciMatch[2])/100; }
+      r.prediction = md.includes('Death within 1 year') ? 'Death within 1 year' : 'Survival beyond 1 year';
+      // Try both HTML and markdown risk category formats
+      const rm = md.match(/(LOW RISK|MODERATE RISK|HIGH RISK|Low Risk|Moderate Risk|High Risk)/i);
+      if (rm) {
+        const cat = rm[1].toLowerCase();
+        if (cat.includes('low')) r.riskCategory = 'Low Risk';
+        else if (cat.includes('moderate')) r.riskCategory = 'Moderate Risk';
+        else r.riskCategory = 'High Risk';
+      }
+      return r;
+    }
+
+    function parseTraditionalScores(md) {
+      const r = { meld: null, meldNa: null, childPugh: null, cpClass: null };
+      // Try markdown format
+      const m1 = md.match(/MELD Score:\*\*\s*(\d+)/); if (m1) r.meld = parseInt(m1[1]);
+      const m2 = md.match(/MELD-Na Score:\*\*\s*(\d+)/); if (m2) r.meldNa = parseInt(m2[1]);
+      const m3 = md.match(/Child-Pugh Score:\*\*\s*(\d+)\s*\(Class\s*([ABC])\)/);
+      if (m3) { r.childPugh = parseInt(m3[1]); r.cpClass = m3[2]; }
+      // Try HTML format (v5 returns styled HTML cards)
+      if (r.meld === null) {
+        // Look for pattern: >NUMBER</div>...MELD Score
+        const hm1 = md.match(/>\s*(\d+)\s*<\/div>[^<]*<div[^>]*>MELD Score/); if (hm1) r.meld = parseInt(hm1[1]);
+      }
+      if (r.meldNa === null) {
+        const hm2 = md.match(/>\s*(\d+)\s*<\/div>[^<]*<div[^>]*>MELD-Na Score/); if (hm2) r.meldNa = parseInt(hm2[1]);
+      }
+      if (r.childPugh === null) {
+        const hm3 = md.match(/>\s*(\d+)\s*<\/div>[^<]*<div[^>]*>Child-Pugh \(Class ([ABC])\)/);
+        if (hm3) { r.childPugh = parseInt(hm3[1]); r.cpClass = hm3[2]; }
+      }
+      return r;
+    }
+
+    async function render() {
+      const btn = $('btn-run');
+      const errBanner = $('error-banner');
+      errBanner.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Calculating...';
+
+      $('results-section').style.display = 'block';
+      $('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      try {
+        const apiResult = await callGradioAPI();
+        // API returns 5 outputs: [ml_html, traditional_html, comparison_html, global_shap_html, patient_shap_html]
+        const mlOut = apiResult[0];
+        const tradOut = apiResult[1];
+        const globalShapHtml = apiResult.length > 3 ? apiResult[3] : null;
+        const patientShapHtml = apiResult.length > 4 ? apiResult[4] : null;
+        const ml = parseMLOutput(mlOut);
+        const trad = parseTraditionalScores(tradOut);
+
+        const results = $('results-content');
+        results.classList.remove('fade-in');
+        void results.offsetWidth;
+        results.classList.add('fade-in');
+
+        if (ml.probability !== null) {
+          const pct = (ml.probability * 100).toFixed(1);
+          $('mortality-pct').textContent = pct + '%';
+          $('score-ring').style.setProperty('--p', pct + '%');
+          if (ml.probability < 0.3) $('score-ring').style.setProperty('--ring-color', 'var(--success)');
+          else if (ml.probability < 0.6) $('score-ring').style.setProperty('--ring-color', 'var(--warning)');
+          else $('score-ring').style.setProperty('--ring-color', 'var(--danger)');
+
+          if (ml.ciLower !== null) {
+            $('ci-section').style.display = 'block';
+            $('ci-lower').textContent = (ml.ciLower*100).toFixed(1)+'%';
+            $('ci-upper').textContent = (ml.ciUpper*100).toFixed(1)+'%';
+            $('ci-fill').style.left = (ml.ciLower*100)+'%';
+            $('ci-fill').style.width = ((ml.ciUpper-ml.ciLower)*100)+'%';
+            $('ci-marker').style.left = (ml.probability*100)+'%';
+          }
+        }
+
+        const badge = $('risk-badge');
+        if (ml.riskCategory === 'Low Risk') { badge.textContent = 'Low Risk'; badge.className = 'status-badge status-low'; }
+        else if (ml.riskCategory === 'Moderate Risk') { badge.textContent = 'Moderate Risk'; badge.className = 'status-badge status-mid'; }
+        else { badge.textContent = 'High Risk'; badge.className = 'status-badge status-high'; }
+
+        // Scores
+        const bili = parseFloat($('total_bilirrubin').value);
+        const inrV = parseFloat($('inr').value);
+        const creat = parseFloat($('creatinine').value);
+        const sod = parseFloat($('sodium').value);
+        const alb = parseFloat($('albumin').value);
+        const asc = $('ascitis').value;
+
+        const lMeld = meldScore(bili, inrV, creat);
+        const lMeldNa = meldNaScore(lMeld, sod);
+        const lCp = childPugh(bili, alb, inrV, asc);
+        const lAlbi = albiScore(alb, bili);
+
+        $('meld-score').textContent = trad.meld || lMeld;
+        $('meld-na-score').textContent = trad.meldNa || lMeldNa;
+        $('cp-score').textContent = trad.childPugh || lCp.pts;
+        $('cp-class').textContent = 'Class ' + (trad.cpClass || lCp.cls);
+        $('albi-score').textContent = lAlbi.score;
+        $('albi-grade').textContent = 'Grade ' + lAlbi.grade;
+
+        const mv = trad.meld || lMeld;
+        $('meld-mort').textContent = mv<10?'<10%':mv<20?'10-19%':mv<30?'20-50%':'>50%';
+
+        $('comparison-section').style.display = 'block';
+
+        // Render SHAP visualizations
+        if (globalShapHtml) renderGlobalShapBars(globalShapHtml);
+        if (patientShapHtml) renderPatientShapBars(patientShapHtml);
+
+        // Initialize PDP feature selector
+        initPDP();
+
+      } catch (err) {
+        console.error(err);
+        errBanner.textContent = 'API Error: ' + err.message + '. Showing local scores only.';
+        errBanner.style.display = 'block';
+
+        const bili = parseFloat($('total_bilirrubin').value);
+        const inrV = parseFloat($('inr').value);
+        const creat = parseFloat($('creatinine').value);
+        const sod = parseFloat($('sodium').value);
+        const alb = parseFloat($('albumin').value);
+        const asc = $('ascitis').value;
+
+        $('meld-score').textContent = meldScore(bili, inrV, creat);
+        $('meld-na-score').textContent = meldNaScore(meldScore(bili, inrV, creat), sod);
+        const cp = childPugh(bili, alb, inrV, asc);
+        $('cp-score').textContent = cp.pts;
+        $('cp-class').textContent = 'Class ' + cp.cls;
+        const al = albiScore(alb, bili);
+        $('albi-score').textContent = al.score;
+        $('albi-grade').textContent = 'Grade ' + al.grade;
+        $('mortality-pct').textContent = 'N/A';
+        $('risk-badge').textContent = 'API Unavailable';
+        $('risk-badge').className = 'status-badge';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '\u26A1 Calculate Risk';
+      }
+    }
+
+    // Presets
+    const PRESETS = {
+      compensated: { age:55,sex:'male',race:'white',etiology_cirrosis:'alcohol',hepatorenal_syndrome:'no',omeprazole:'no',spironolactone:'no',furosemide:'no',propanolol:'yes',dialisis:'no',portal_vein_thrombosis:'no',ascitis:'no',hepatocellular_carcinoma:'no',albumin:3.8,total_bilirrubin:1.2,direct_bilirrubina:0.3,inr:1.1,creatinine:0.9,platelets:180,ast:28,alt:22,hemoglobin:14,hematocrit:42,leucocytes:5.5,sodium:140,potassium:4.2,varices:'yes',red_wale_marks:'no',rupture_point:'no',active_bleeding:'no',rebleeding:'no',therapy:'Banding',terlipressin_dose:2,time_to_endoscophy_hours:8 },
+      decompensated: { age:62,sex:'male',race:'white',etiology_cirrosis:'alcohol',hepatorenal_syndrome:'no',omeprazole:'yes',spironolactone:'yes',furosemide:'yes',propanolol:'no',dialisis:'no',portal_vein_thrombosis:'no',ascitis:'yes',hepatocellular_carcinoma:'no',albumin:3.0,total_bilirrubin:2.8,direct_bilirrubina:1.2,inr:1.6,creatinine:1.3,platelets:95,ast:52,alt:38,hemoglobin:10.5,hematocrit:32,leucocytes:7.2,sodium:134,potassium:4.5,varices:'yes',red_wale_marks:'yes',rupture_point:'no',active_bleeding:'yes',rebleeding:'no',therapy:'Banding',terlipressin_dose:2,time_to_endoscophy_hours:14 },
+      advanced: { age:58,sex:'male',race:'white',etiology_cirrosis:'alcohol+hcv',hepatorenal_syndrome:'no',omeprazole:'yes',spironolactone:'yes',furosemide:'yes',propanolol:'no',dialisis:'no',portal_vein_thrombosis:'yes',ascitis:'yes',hepatocellular_carcinoma:'no',albumin:2.4,total_bilirrubin:5.2,direct_bilirrubina:2.8,inr:2.4,creatinine:2.1,platelets:55,ast:120,alt:85,hemoglobin:8.5,hematocrit:26,leucocytes:12.0,sodium:128,potassium:5.1,varices:'yes',red_wale_marks:'yes',rupture_point:'yes',active_bleeding:'yes',rebleeding:'yes',therapy:'Banding',terlipressin_dose:4,time_to_endoscophy_hours:18 },
+      hrs: { age:64,sex:'male',race:'white',etiology_cirrosis:'alcohol',hepatorenal_syndrome:'yes',omeprazole:'yes',spironolactone:'yes',furosemide:'yes',propanolol:'no',dialisis:'yes',portal_vein_thrombosis:'no',ascitis:'yes',hepatocellular_carcinoma:'no',albumin:2.7,total_bilirrubin:3.5,direct_bilirrubina:1.8,inr:1.8,creatinine:3.2,platelets:72,ast:68,alt:45,hemoglobin:9.2,hematocrit:28,leucocytes:9.5,sodium:130,potassium:5.3,varices:'yes',red_wale_marks:'yes',rupture_point:'no',active_bleeding:'yes',rebleeding:'no',therapy:'Banding',terlipressin_dose:4,time_to_endoscophy_hours:10 }
+    };
+
+    function loadPreset(name) {
+      if (!name || !PRESETS[name]) return;
+      const p = PRESETS[name];
+      Object.keys(p).forEach(k => {
+        const el = $(k);
+        if (el) { el.value = p[k]; if (el.type === 'range') syncVal(el); }
+      });
+      // Expand all sections
+      document.querySelectorAll('.section.collapsed').forEach(s => s.classList.remove('collapsed'));
+      render();
+    }
+
+    function exportResults() {
+      const ids = ['age','sex','race','etiology_cirrosis','hepatorenal_syndrome','omeprazole','spironolactone','furosemide','propanolol','dialisis','portal_vein_thrombosis','ascitis','hepatocellular_carcinoma','albumin','total_bilirrubin','direct_bilirrubina','inr','creatinine','platelets','ast','alt','hemoglobin','hematocrit','leucocytes','sodium','potassium','varices','red_wale_marks','rupture_point','active_bleeding','therapy','terlipressin_dose','time_to_endoscophy_hours','rebleeding'];
+      const inputs = {};
+      ids.forEach(id => { const el = $(id); if (el) inputs[id] = isNaN(el.value)||el.value===''?el.value:parseFloat(el.value); });
+      const data = {
+        timestamp: new Date().toISOString(),
+        disclaimer: "FOR RESEARCH/EDUCATIONAL USE ONLY",
+        model: "Random Forest with Isotonic Calibration (AUC 0.915)",
+        inputs,
+        results: {
+          mortality: $('mortality-pct').textContent,
+          risk: $('risk-badge').textContent,
+          ci: { lower: $('ci-lower').textContent, upper: $('ci-upper').textContent },
+          scores: { MELD: $('meld-score').textContent, MELDNa: $('meld-na-score').textContent, ChildPugh: $('cp-score').textContent, ALBI: $('albi-score').textContent }
+        }
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `evb_risk_${Date.now()}.json`;
+      a.click();
+    }
+
+    // ===== PDP Interactive Feature =====
+    let pdpCache = {};
+    let pdpFeatures = [];
+
+    async function initPDP() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/pdp`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        pdpFeatures = data.features || [];
+        const sel = $('pdp-feature-select');
+        sel.innerHTML = '<option value="">Select a feature to explore...</option>';
+        pdpFeatures.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.name;
+          opt.textContent = f.label;
+          sel.appendChild(opt);
+        });
+        $('pdp-section').style.display = 'block';
+      } catch (e) {
+        console.warn('PDP init failed:', e);
+      }
+    }
+
+    async function loadPDP(featureName) {
+      if (!featureName) {
+        $('pdp-chart-container').style.display = 'none';
+        $('pdp-info').textContent = '';
+        return;
+      }
+      $('pdp-chart-container').style.display = 'block';
+      $('pdp-loading').style.display = 'flex';
+      $('pdp-svg').innerHTML = '';
+      $('pdp-info').textContent = '';
+
+      try {
+        let data;
+        if (pdpCache[featureName]) {
+          data = pdpCache[featureName];
+        } else {
+          const resp = await fetch(`${API_BASE}/api/pdp/${featureName}`);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          data = await resp.json();
+          pdpCache[featureName] = data;
+        }
+        renderPDPChart(data);
+      } catch (e) {
+        $('pdp-loading').textContent = 'Failed to load PDP data';
+        console.error('PDP load error:', e);
+      }
+    }
+
+    function renderPDPChart(data) {
+      const svg = $('pdp-svg');
+      const tooltip = $('pdp-tooltip');
+      $('pdp-loading').style.display = 'none';
+
+      const vals = data.values;
+      const probs = data.probabilities;
+      const label = data.label || data.feature;
+      if (!vals || !probs || vals.length === 0) {
+        $('pdp-loading').style.display = 'flex';
+        $('pdp-loading').textContent = 'No data available';
+        return;
+      }
+
+      // Chart dimensions
+      const W = 400, H = 220;
+      const pad = { top: 20, right: 20, bottom: 40, left: 55 };
+      const cw = W - pad.left - pad.right;
+      const ch = H - pad.top - pad.bottom;
+
+      const xMin = Math.min(...vals), xMax = Math.max(...vals);
+      const yMin = Math.min(...probs), yMax = Math.max(...probs);
+      const yPad = (yMax - yMin) * 0.1 || 0.05;
+      const yLo = Math.max(0, yMin - yPad), yHi = Math.min(1, yMax + yPad);
+
+      const xScale = v => pad.left + ((v - xMin) / (xMax - xMin || 1)) * cw;
+      const yScale = v => pad.top + ch - ((v - yLo) / (yHi - yLo || 1)) * ch;
+
+      let svgContent = '';
+
+      // Gradient fill
+      svgContent += `<defs>
+        <linearGradient id="pdp-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#92fe9d" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#92fe9d" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>`;
+
+      // Grid lines
+      const yTicks = 5;
+      for (let i = 0; i <= yTicks; i++) {
+        const yVal = yLo + (yHi - yLo) * i / yTicks;
+        const y = yScale(yVal);
+        svgContent += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>`;
+        svgContent += `<text x="${pad.left - 6}" y="${y + 3}" text-anchor="end" class="pdp-axis-label">${(yVal * 100).toFixed(0)}%</text>`;
+      }
+
+      // X-axis ticks
+      const xTicks = 5;
+      for (let i = 0; i <= xTicks; i++) {
+        const xVal = xMin + (xMax - xMin) * i / xTicks;
+        const x = xScale(xVal);
+        svgContent += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${H - pad.bottom}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`;
+        svgContent += `<text x="${x}" y="${H - pad.bottom + 14}" text-anchor="middle" class="pdp-axis-label">${xVal.toFixed(xMax > 100 ? 0 : 1)}</text>`;
+      }
+
+      // Axis labels
+      svgContent += `<text x="${pad.left + cw / 2}" y="${H - 4}" text-anchor="middle" fill="#92fe9d" font-size="9" font-family="Inter,sans-serif" font-weight="600">${label}</text>`;
+      svgContent += `<text x="12" y="${pad.top + ch / 2}" text-anchor="middle" fill="#92fe9d" font-size="8" font-family="Inter,sans-serif" transform="rotate(-90, 12, ${pad.top + ch / 2})">Mortality Prob.</text>`;
+
+      // Area fill
+      let areaPath = `M ${xScale(vals[0])} ${yScale(probs[0])}`;
+      for (let i = 1; i < vals.length; i++) {
+        areaPath += ` L ${xScale(vals[i])} ${yScale(probs[i])}`;
+      }
+      areaPath += ` L ${xScale(vals[vals.length - 1])} ${H - pad.bottom} L ${xScale(vals[0])} ${H - pad.bottom} Z`;
+      svgContent += `<path d="${areaPath}" fill="url(#pdp-grad)"/>`;
+
+      // Line
+      let linePath = `M ${xScale(vals[0])} ${yScale(probs[0])}`;
+      for (let i = 1; i < vals.length; i++) {
+        linePath += ` L ${xScale(vals[i])} ${yScale(probs[i])}`;
+      }
+      svgContent += `<path d="${linePath}" fill="none" stroke="#92fe9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+      // Data points (small dots)
+      vals.forEach((v, i) => {
+        svgContent += `<circle cx="${xScale(v)}" cy="${yScale(probs[i])}" r="3" fill="#92fe9d" opacity="0.6" data-idx="${i}"/>`;
+      });
+
+      svg.innerHTML = svgContent;
+
+      // Tooltip interaction
+      const container = $('pdp-chart-container');
+      container.addEventListener('pointermove', (e) => {
+        const rect = svg.getBoundingClientRect();
+        const svgX = (e.clientX - rect.left) / rect.width * W;
+        const chartX = svgX - pad.left;
+        if (chartX < 0 || chartX > cw) { tooltip.style.display = 'none'; return; }
+        const ratio = chartX / cw;
+        const idx = Math.round(ratio * (vals.length - 1));
+        if (idx < 0 || idx >= vals.length) { tooltip.style.display = 'none'; return; }
+        tooltip.innerHTML = `<strong>${label}:</strong> ${vals[idx].toFixed(xMax > 100 ? 0 : 2)}<br><strong>Mortality:</strong> ${(probs[idx] * 100).toFixed(1)}%`;
+        tooltip.style.display = 'block';
+        const tx = e.clientX - container.getBoundingClientRect().left;
+        const ty = e.clientY - container.getBoundingClientRect().top;
+        tooltip.style.left = Math.min(tx + 10, container.offsetWidth - 120) + 'px';
+        tooltip.style.top = (ty - 40) + 'px';
+      });
+      container.addEventListener('pointerleave', () => { tooltip.style.display = 'none'; });
+
+      // Info text
+      const minProb = Math.min(...probs), maxProb = Math.max(...probs);
+      const minIdx = probs.indexOf(minProb), maxIdx = probs.indexOf(maxProb);
+      $('pdp-info').innerHTML = `Lowest risk: <strong>${(minProb*100).toFixed(1)}%</strong> at ${label} = ${vals[minIdx].toFixed(1)} &nbsp;|&nbsp; Highest risk: <strong>${(maxProb*100).toFixed(1)}%</strong> at ${label} = ${vals[maxIdx].toFixed(1)}`;
+    }
+
+    // Init slider displays
+    window.addEventListener('load', () => {
+      document.querySelectorAll('input[type="range"]').forEach(el => syncVal(el));
+    });
+  </script>
+</body>
+</html>

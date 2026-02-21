@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVB Prognosis — 1-Year Mortality Risk Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #00e5a0;
+      --accent2: #00b4d8;
+      --bg: #0a0e17;
+      --glass: rgba(15, 23, 42, 0.6);
+      --glass-border: rgba(0, 229, 160, 0.12);
+      --text: #ecedee;
+      --text-dim: #9ba1a6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 24px;
+    }
+
+    /* Vapor background */
+    .vapor {
+      position: fixed; inset: 0; z-index: -1; overflow: hidden;
+    }
+    .vapor::before, .vapor::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      animation: drift 25s ease-in-out infinite alternate;
+    }
+    .vapor::before {
+      width: 600px; height: 600px;
+      background: var(--accent);
+      top: -15%; left: -10%;
+    }
+    .vapor::after {
+      width: 500px; height: 500px;
+      background: var(--accent2);
+      bottom: -15%; right: -10%;
+      animation-delay: -8s;
+    }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to { transform: translate(80px, 40px) scale(1.15); }
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Badge */
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 229, 160, 0.08);
+      border: 1px solid rgba(0, 229, 160, 0.25);
+      border-radius: 24px;
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .model-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: var(--text-dim);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    /* Recommended badge */
+    .recommended {
+      position: absolute;
+      top: -12px;
+      right: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0a0e17;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      position: relative;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 229, 160, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 229, 160, 0.08);
+    }
+
+    .card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px rgba(0, 229, 160, 0.15);
+    }
+    .card.active .recommended {
+      display: block;
+    }
+
+    .card-icon {
+      font-size: 2.8rem;
+      line-height: 1;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card p {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .feature-tag {
+      background: rgba(0, 229, 160, 0.08);
+      border: 1px solid rgba(0, 229, 160, 0.15);
+      border-radius: 8px;
+      padding: 3px 10px;
+      font-size: 0.68rem;
+      color: var(--accent);
+    }
+
+    /* Direct link */
+    .direct-link {
+      margin-bottom: 40px;
+    }
+    .direct-link a {
+      color: var(--accent);
+      font-size: 0.82rem;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 229, 160, 0.3);
+      padding-bottom: 2px;
+      transition: all 0.2s;
+    }
+    .direct-link a:hover {
+      border-color: var(--accent);
+    }
+
+    /* Footer */
+    .footer {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+      max-width: 600px;
+      text-align: center;
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .disclaimer {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-bottom: 32px;
+      font-size: 0.75rem;
+      color: #ff8a8a;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="vapor"></div>
+
+  <div class="container">
+    <div class="model-badge">
+      <span class="dot"></span>
+      Random Forest &mdash; AUC 0.915 (95% CI: 0.856&ndash;0.961)
+    </div>
+
+    <h1>EVB Prognosis</h1>
+    <p class="subtitle">
+      Machine learning-based 1-year mortality risk calculator for cirrhotic patients with acute esophageal variceal bleeding.
+    </p>
+
+    <div class="disclaimer">
+      <strong>RESEARCH USE ONLY</strong> &mdash; This tool is for educational and research purposes. Not approved by any regulatory agency. Always rely on clinical judgment.
+    </div>
+
+    <div class="cards">
+      <a class="card" id="card-desktop" href="javascript:void(0)" onclick="goDesktop()">
+        <span class="recommended">Recommended</span>
+        <div class="card-icon">&#128421;</div>
+        <h2>Desktop Version</h2>
+        <p>Full-featured Gradio interface with glassmorphism theme. Includes toggle to switch between styled and classic Gradio views.</p>
+        <div class="card-features">
+          <span class="feature-tag">Glassmorphism UI</span>
+          <span class="feature-tag">Classic Toggle</span>
+          <span class="feature-tag">34 Features</span>
+          <span class="feature-tag">ML + Scores</span>
+        </div>
+      </a>
+
+      <a class="card" id="card-mobile" href="javascript:void(0)" onclick="goMobile()">
+        <span class="recommended">Recommended</span>
+        <div class="card-icon">&#128241;</div>
+        <h2>Mobile Version</h2>
+        <p>Touch-optimized glassmorphism calculator designed for smartphones. Works on Android and iOS browsers.</p>
+        <div class="card-features">
+          <span class="feature-tag">Touch Optimized</span>
+          <span class="feature-tag">iOS + Android</span>
+          <span class="feature-tag">34 Features</span>
+          <span class="feature-tag">Offline Scores</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="direct-link">
+      <a href="/calculator">Open HTML Calculator directly &rarr;</a>
+    </div>
+
+    <div class="footer">
+      <p>
+        <strong>Citation:</strong> Rech MM, Soldera J, Corso LL et al. Development, Internal and Prospective validation of a machine learning model for the prediction of mortality in cirrhotic patients with acute esophageal variceal bleeding. <em>World J Hepatol</em>. 2025.
+      </p>
+      <p style="margin-top: 8px;">
+        <a href="mailto:mmrech@ucs.br">mmrech@ucs.br</a> &nbsp;|&nbsp; Version 3.0
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Device detection
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (window.innerWidth <= 768);
+    }
+
+    // Highlight recommended card
+    const mobile = isMobile();
+    if (mobile) {
+      document.getElementById('card-mobile').classList.add('active');
+    } else {
+      document.getElementById('card-desktop').classList.add('active');
+    }
+
+    function goDesktop() {
+      // Go to the Gradio app (root path without the landing page)
+      window.location.href = '/?view=gradio';
+    }
+
+    function goMobile() {
+      window.location.href = '/mobile';
+    }
+  </script>
+</body>
+</html>
