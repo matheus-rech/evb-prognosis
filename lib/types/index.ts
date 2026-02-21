@@ -116,6 +116,71 @@ export const CLINICAL_REFERENCES = [
   "Johnson PJ, et al. Assessment of liver function in patients with hepatocellular carcinoma: a new evidence-based approach—the ALBI grade. J Clin Oncol. 2015;33(6):550-558.",
 ];
 
+
+// ===== Assessment / History types =====
+
+/** Nested patient data as stored in the assessment history */
+export interface AssessmentPatientData {
+  generalInfo: {
+    age: number;
+    sex: string;
+    race: string;
+    etiology_cirrosis: string;
+  };
+  clinicalStatus: {
+    ascitis: string;
+    therapy: string;
+    portal_vein_thrombosis: string;
+    hepatocellular_carcinoma: string;
+    varices: string;
+    red_wale_marks: string;
+    rupture_point: string;
+    active_bleeding: string;
+    rebleeding: string;
+    hepatorenal_syndrome: string;
+    terlipressin_dose: number;
+    time_to_endoscophy_hours: number;
+  };
+  labValues: {
+    albumin: number;
+    total_bilirubin: number;
+    direct_bilirubin: number;
+    inr: number;
+    creatinine: number;
+    sodium: number;
+    potassium: number;
+    platelets: number;
+    ast: number;
+    alt: number;
+    hemoglobin: number;
+    hematocrit: number;
+    leucocytes: number;
+  };
+}
+
+export interface AssessmentResult {
+  mlResult: {
+    probability: number;
+    ciLower: number;
+    ciUpper: number;
+    prediction: 0 | 1;
+    riskCategory: RiskCategory;
+  };
+  traditionalScores: {
+    meld: number;
+    meldNa: number;
+    childPugh: number;
+    childPughClass: "A" | "B" | "C";
+  };
+}
+
+export interface Assessment {
+  id: string;
+  date: string; // ISO string
+  patientData: AssessmentPatientData;
+  result: AssessmentResult;
+}
+
 // ===== Preset Scenarios =====
 
 export interface PresetScenario {
