@@ -1,0 +1,17 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Run unit tests
+    runs_on: linux-medium
+    steps:
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
