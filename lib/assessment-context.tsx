@@ -13,7 +13,88 @@ import React, {
   useState,
 } from "react";
 import { Platform } from "react-native";
-import type { Assessment } from "@/lib/types";
+import type {
+  Assessment,
+  AssessmentPatientData,
+  AssessmentResult,
+  PatientInput,
+  PredictionResult,
+} from "@/lib/types";
+
+// ---------------------------------------------------------------------------
+// Transform helpers (PatientInput + PredictionResult → nested Assessment types)
+// ---------------------------------------------------------------------------
+
+/** Convert flat PatientInput → nested AssessmentPatientData (also fixes spelling typos). */
+export function toAssessmentPatientData(input: PatientInput): AssessmentPatientData {
+  return {
+    generalInfo: {
+      age: input.age,
+      sex: input.sex,
+      race: input.race,
+      etiology_cirrosis: input.etiology_cirrosis,
+    },
+    clinicalStatus: {
+      ascitis: input.ascitis,
+      therapy: input.therapy,
+      portal_vein_thrombosis: input.portal_vein_thrombosis,
+      hepatocellular_carcinoma: input.hepatocellular_carcinoma,
+      varices: input.varices,
+      red_wale_marks: input.red_wale_marks,
+      rupture_point: input.rupture_point,
+      active_bleeding: input.active_bleeding,
+      rebleeding: input.rebleeding,
+      hepatorenal_syndrome: input.hepatorenal_syndrome,
+      terlipressin_dose: input.terlipressin_dose,
+      time_to_endoscophy_hours: input.time_to_endoscophy_hours,
+    },
+    labValues: {
+      albumin: input.albumin,
+      // Correct double-r typos from original dataset column names
+      total_bilirubin: input.total_bilirrubin,
+      direct_bilirubin: input.direct_bilirrubina,
+      inr: input.inr,
+      creatinine: input.creatinine,
+      sodium: input.sodium,
+      potassium: input.potassium,
+      platelets: input.platelets,
+      ast: input.ast,
+      alt: input.alt,
+      hemoglobin: input.hemoglobin,
+      hematocrit: input.hematocrit,
+      leucocytes: input.leucocytes,
+    },
+  };
+}
+
+/** Convert flat PredictionResult → nested AssessmentResult. */
+export function toAssessmentResult(result: PredictionResult): AssessmentResult {
+  return {
+    mlResult: {
+      probability: result.probability,
+      ciLower: result.ciLower,
+      ciUpper: result.ciUpper,
+      prediction: result.prediction,
+      riskCategory: result.riskCategory,
+    },
+    traditionalScores: {
+      meld: result.meld,
+      meldNa: result.meldNa,
+      childPugh: result.childPughScore,
+      childPughClass: result.childPughClass,
+    },
+  };
+}
+
+/** Build a complete Assessment from raw input + prediction result. */
+export function buildAssessment(input: PatientInput, result: PredictionResult): Assessment {
+  return {
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    patientData: toAssessmentPatientData(input),
+    result: toAssessmentResult(result),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Storage helpers (AsyncStorage on native, localStorage on web)

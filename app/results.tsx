@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
@@ -19,6 +19,7 @@ import { VaporBackground } from "@/components/vapor-background";
 import { ScoreRing } from "@/components/score-ring";
 import type { PatientInput, PredictionResult } from "@/lib/types";
 import { CLINICAL_REFERENCES } from "@/lib/types";
+import { buildAssessment, useAssessment } from "@/lib/assessment-context";
 import { generateReportHTML } from "@/lib/services/pdf-report";
 import { validateAllFields } from "@/lib/services/validation";
 import { computeFeatureImportance } from "@/lib/services/feature-importance";
@@ -35,6 +36,8 @@ export default function ResultsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ data: string }>();
   const [exporting, setExporting] = useState(false);
+  const { addAssessment } = useAssessment();
+  const savedRef = useRef(false);
 
   const parsed = useMemo(() => {
     try {
@@ -43,6 +46,14 @@ export default function ResultsScreen() {
       return null;
     }
   }, [params.data]);
+
+  // Auto-save to history on first render (guard prevents double-save in Strict Mode)
+  useEffect(() => {
+    if (!savedRef.current && parsed?.input && parsed?.result) {
+      savedRef.current = true;
+      addAssessment(buildAssessment(parsed.input, parsed.result));
+    }
+  }, [parsed, addAssessment]);
 
   if (!parsed || !parsed.result) {
     return (
