@@ -1,0 +1,23 @@
+name: Build and Submit Android
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_android:
+    name: Build Android (production)
+    type: build
+    params:
+      platform: android
+      profile: production
+      message: "Auto-build from push to master"
+
+  submit_android:
+    name: Submit to Google Play (internal)
+    type: submit
+    needs: [build_android]
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production

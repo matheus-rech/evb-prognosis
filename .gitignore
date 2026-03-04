@@ -36,6 +36,9 @@ yarn-error.*
 .env*.local
 production.json
 *.secrets.json
+google-play-service-account.json
+credentials.json
+android-keystore.jks
 
 # typescript
 *.tsbuildinfo

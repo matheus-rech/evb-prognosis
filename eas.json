@@ -15,13 +15,20 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "credentialsSource": "local"
+      }
     }
   },
   "submit": {
     "production": {
       "ios": {
         "ascAppId": "6759500199"
+      },
+      "android": {
+        "track": "internal",
+        "serviceAccountKeyPath": "./google-play-service-account.json"
       }
     }
   }
